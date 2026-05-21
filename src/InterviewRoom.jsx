@@ -15,7 +15,7 @@ const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""
 const genAI = new GoogleGenerativeAI(apiKey)
 
 // 👉 接收外面传进来的 userEmail
-export default function InterviewRoom({ onExit, userEmail }) {
+export default function InterviewRoom({ onExit, userEmail, resumeContext }) {
   const [messages, setMessages] = useState([
     { role: "ai", text: "你好！我是你的专属 AI 面试官。准备好开始今天的技术面试了吗？请先做个简短的自我介绍吧。" }
   ])
@@ -43,7 +43,16 @@ export default function InterviewRoom({ onExit, userEmail }) {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }) 
-      const prompt = `你现在是一位严谨但友善的科技公司技术面试官。应聘者回答是："${input}"。请根据回答给出专业评价，必要时使用 Markdown。最后顺其自然提出下一个问题。每次只问一个问题。`
+      const prompt = `你现在是一位严谨但友善的科技公司技术面试官。
+应聘者的当前回答是："${input}"
+
+${resumeContext ? `【重要背景信息】：应聘者提供了以下简历/技术栈说明：“${resumeContext}”。请务必仔细阅读。` : ''}
+
+【你的任务】：
+1. 简短地对用户的回答给出专业反馈。
+2. 提出下一个面试问题。
+3. 如果有简历背景信息，你的提问必须尽量围绕简历中提到的技术栈、项目经验或学生背景来展开，进行深度挖掘。如果没有简历信息，则问通用的前端/后端技术题。
+4. 每次只能问一个问题，保持自然流畅的对话感，切忌像机器一样死板。涉及代码时可以使用 Markdown。`
 
       const result = await model.generateContent(prompt)
       setMessages([...newMessages, { role: "ai", text: result.response.text() }])

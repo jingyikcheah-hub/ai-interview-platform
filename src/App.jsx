@@ -11,6 +11,7 @@ function App() {
   const [user, setUser] = useState(null)
   const [events, setEvents] = useState([])
   const [reports, setReports] = useState([]) // 👉 新增：存放面试报告的箱子
+  const [resumeText, setResumeText] = useState("") // 👉 新增：用于存放用户填写的简历上下文
   
   const [isOpen, setIsOpen] = useState(false)
   const [newTitle, setNewTitle] = useState("")
@@ -61,7 +62,7 @@ function App() {
   if (user) {
     if (isInterviewing) {
       // 👉 退出面试间时，重新抓取一次数据，刷新成绩单
-      return <InterviewRoom userEmail={user.email} onExit={() => { setIsInterviewing(false); fetchReports(); }} />
+      return <InterviewRoom userEmail={user.email} resumeContext={resumeText} onExit={() => { setIsInterviewing(false); fetchReports(); }} />
     }
 
     return (
@@ -82,6 +83,24 @@ function App() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* 左侧：人才市场区占三分之二 */}
             <div className="md:col-span-2">
+              <Card className="mb-8 border-blue-100 shadow-sm bg-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <i className="fa-solid fa-file-lines text-blue-600"></i> 我的简历 / 技术栈
+                  </CardTitle>
+                  <CardDescription>
+                    将你的简历或擅长的技术栈粘贴在这里，AI 将针对你的真实背景进行“定制化拷问”。
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Textarea 
+                    placeholder="例如：我目前是一名大二的学生，熟悉 React 和全栈开发，做过一些 AI 相关的项目..." 
+                    className="min-h-[100px] resize-none"
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                  />
+                </CardContent>
+              </Card>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">人才市场 (Events)</h2>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
