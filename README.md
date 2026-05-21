@@ -1,16 +1,43 @@
-# React + Vite
+# 🚀 AI-Driven Tech Interview Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个基于现代化 Web 架构构建的下一代 AI 模拟面试与招聘平台。结合了大语言模型（LLM）的推理能力与 RAG 思想，为候选人提供千人千面的硬核技术面体验。
 
-Currently, two official plugins are available:
+## ✨ 核心亮点 (Features)
+* **🤖 定制化 AI 面试官**: 接入 Gemini 2.5 Flash 核心，支持根据用户填写的**真实简历与技术栈**（微型 RAG 架构）进行深度定向提问。
+* **💻 沉浸式代码交互**: 对话框深度集成 `react-markdown` 与语法高亮，完美渲染后端算法与前端 UI 代码片段。
+* **🔐 企业级安全认证**: 采用 Supabase Auth 驱动，完整打通 GitHub & LinkedIn OAuth 第三方 OAuth 登录闭环。
+* **📊 成绩单与数据持久化**: 面试结束后自动打包对话记录，通过 Row Level Security (RLS) 策略安全存入云端数据库并在 Dashboard 实时生成历史报告。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ 技术栈 (Tech Stack)
+* **前端框架**: React 18 + Vite
+* **UI 组件库**: Tailwind CSS + Shadcn UI
+* **后端与数据库**: Supabase (PostgreSQL)
+* **大语言模型**: Google Generative AI (Gemini API)
+* **云端部署**: Vercel
 
-## React Compiler
+## 🚀 快速启动 (Quick Start)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. 克隆项目到本地
+\`\`\`bash
+git clone https://github.com/jingyikcheah-hub/ai-interview-platform.git
+\`\`\`
 
-## Expanding the ESLint configuration
+2. 安装依赖
+\`\`\`bash
+npm install
+\`\`\`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. 配置环境变量 (请在根目录创建 `.env.local` 文件并填入你的 Key)
+\`\`\`env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GEMINI_API_KEY=your_gemini_api_key
+\`\`\`
+
+4. 启动开发服务器
+\`\`\`bash
+npm run dev
+\`\`\`
+
+## 📄 开源协议 (License)
+本项目基于 [MIT License](LICENSE) 开源。
