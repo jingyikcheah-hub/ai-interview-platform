@@ -59,7 +59,7 @@ export default function InterviewRoom({ onExit }) {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-2xl font-bold text-blue-600">AI 虚拟面试间</CardTitle>
-              <CardDescription>底层驱动引擎: Gemini 1.5 Flash</CardDescription>
+              <CardDescription>底层驱动引擎: Gemini 2.5 Flash</CardDescription>
             </div>
             <Button variant="destructive" onClick={onExit}>结束面试</Button>
           </div>
