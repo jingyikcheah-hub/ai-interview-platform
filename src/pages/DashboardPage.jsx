@@ -31,6 +31,7 @@ export default function DashboardPage() {
 
   // Event creation dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingEventId, setEditingEventId] = useState(null)
   const [newTitle, setNewTitle] = useState('')
   const [newOrganizer, setNewOrganizer] = useState('')
   const [newDescription, setNewDescription] = useState('')
@@ -62,23 +63,55 @@ export default function DashboardPage() {
     if (!error) setReports(data || [])
   }
 
-  const handleCreateEvent = async (e) => {
+  const handleSaveEvent = async (e) => {
     e.preventDefault()
     if (!newTitle || !newOrganizer || !newDescription) return
     setIsSubmitting(true)
-    const { error } = await supabase.from('events').insert([{
-      title: newTitle,
-      organizer: newOrganizer,
-      description: newDescription,
-    }])
-    setIsSubmitting(false)
-    if (!error) {
-      setIsDialogOpen(false)
-      setNewTitle('')
-      setNewOrganizer('')
-      setNewDescription('')
-      fetchEvents()
+    
+    if (editingEventId) {
+      const { error } = await supabase.from('events').update({
+        title: newTitle,
+        organizer: newOrganizer,
+        description: newDescription,
+      }).eq('id', editingEventId)
+    } else {
+      const { error } = await supabase.from('events').insert([{
+        title: newTitle,
+        organizer: newOrganizer,
+        description: newDescription,
+        author_email: user?.email || '',
+      }])
     }
+    
+    setIsSubmitting(false)
+    setIsDialogOpen(false)
+    setEditingEventId(null)
+    setNewTitle('')
+    setNewOrganizer('')
+    setNewDescription('')
+    fetchEvents()
+  }
+
+  const handleDeleteEvent = async (id) => {
+    if (!confirm(lang === 'cn' ? '确定要删除这条招募令吗？' : 'Are you sure you want to delete this event?')) return
+    await supabase.from('events').delete().eq('id', id)
+    fetchEvents()
+  }
+
+  const openCreateDialog = () => {
+    setEditingEventId(null)
+    setNewTitle('')
+    setNewOrganizer('')
+    setNewDescription('')
+    setIsDialogOpen(true)
+  }
+
+  const openEditDialog = (event) => {
+    setEditingEventId(event.id)
+    setNewTitle(event.title)
+    setNewOrganizer(event.organizer)
+    setNewDescription(event.description)
+    setIsDialogOpen(true)
   }
 
   const handleLaunchInterview = () => {
@@ -167,15 +200,15 @@ export default function DashboardPage() {
               </h2>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="secondary" size="sm" className="bg-secondary/80 hover:bg-secondary">
+                  <Button variant="secondary" size="sm" className="bg-secondary/80 hover:bg-secondary" onClick={openCreateDialog}>
                     <i className="fa-solid fa-plus mr-1" /> {t('dash.events.create')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] glass-panel border-white/10">
                   <DialogHeader>
-                    <DialogTitle>{t('events.dialog.title')}</DialogTitle>
+                    <DialogTitle>{editingEventId ? (lang === 'cn' ? '编辑招募令' : 'Edit Event') : t('events.dialog.title')}</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleCreateEvent} className="space-y-4 mt-4">
+                  <form onSubmit={handleSaveEvent} className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">{t('events.field.title')}</label>
                       <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required className="bg-background/50 border-white/10" />
@@ -196,10 +229,20 @@ export default function DashboardPage() {
               </Dialog>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              {events.map((event) => (
-                <Card key={event.id} className="bg-card/40 border-white/5 hover:border-primary/20 hover:bg-card/60 transition-all duration-300 group">
+              {events.map((event, index) => (
+                <Card key={event.id || index} className="bg-card/40 border-white/5 hover:border-primary/20 hover:bg-card/60 transition-all duration-300 group relative">
+                  {user?.email && user.email === event.author_email && event.id && (
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => openEditDialog(event)}>
+                        <i className="fa-solid fa-pen text-xs" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteEvent(event.id)}>
+                        <i className="fa-solid fa-trash text-xs" />
+                      </Button>
+                    </div>
+                  )}
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">{event.title}</CardTitle>
+                    <CardTitle className="text-base pr-12">{event.title}</CardTitle>
                     <CardDescription className="text-primary/80 text-xs mt-1">{event.organizer}</CardDescription>
                   </CardHeader>
                   <CardContent>

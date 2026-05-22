@@ -153,7 +153,7 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
       console.error('AI response error:', error)
       const errorMsg = error.message?.includes('API key configuration error')
         ? 'API key configuration error. Please check GEMINI_API_KEY in Vercel settings.'
-        : `${t('interview.reconnect')} — ${t('common.retry')}`
+        : `${t('interview.reconnect')} — ${t('common.retry')}\n\n**(Debug Info: ${error.message})**`
       addMessage('ai', errorMsg)
     } finally {
       setIsLoading(false)
