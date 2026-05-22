@@ -71,20 +71,20 @@ function Header() {
 
         {/* ── Right: Dynamic area ── */}
         <div className="flex items-center gap-3">
+          <Button
+            id="header-lang-toggle"
+            variant="outline"
+            size="sm"
+            onClick={toggleLang}
+            className="flex items-center gap-2 h-9 px-3 rounded-md border-white/10 bg-background/50 text-xs font-bold text-foreground hover:bg-white/10 hover:text-primary transition-all"
+            title={lang === 'en' ? 'Switch to Chinese' : '切换到英文'}
+          >
+            <i className="fa-solid fa-globe text-primary/70" />
+            {lang === 'en' ? '中文' : 'English'}
+          </Button>
+
           {user ? (
             <>
-              {/* Language toggle */}
-              <Button
-                id="header-lang-toggle"
-                variant="ghost"
-                size="sm"
-                onClick={toggleLang}
-                className="h-8 w-8 rounded-md border border-white/5 p-0 text-xs font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                title={lang === 'en' ? 'Switch to Chinese' : '切换到英文'}
-              >
-                {lang === 'en' ? '中' : 'EN'}
-              </Button>
-
               {/* User email */}
               <span
                 id="header-user-email"
@@ -109,7 +109,13 @@ function Header() {
             <Button
               id="header-get-started"
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => {
+                if (window.location.pathname === '/') {
+                  document.getElementById('auth-section')?.scrollIntoView({ behavior: 'smooth' })
+                } else {
+                  navigate('/')
+                }
+              }}
               className="bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
             >
               <i className="fa-solid fa-bolt mr-1.5 text-[11px]" />

@@ -7,12 +7,14 @@ const genAI = new GoogleGenerativeAI(apiKey)
  * After an interview ends, send the full conversation history to Gemini
  * and request a structured JSON evaluation.
  */
-export async function generateEvaluation(messages, resumeContext = '') {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+export async function generateEvaluation(messages, resumeContext = '', lang = 'en') {
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
   const chatHistory = messages.map((m, i) => 
     `[${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}] (Round ${Math.ceil((i+1)/2)}): ${m.text}`
   ).join('\n\n')
+
+  const langName = lang === 'en' ? 'English' : 'Simplified Chinese (简体中文)'
 
   const prompt = `You are a senior technical hiring committee member reviewing an AI-conducted technical interview. 
 Analyze the following interview transcript and produce a STRICT JSON evaluation.
@@ -38,6 +40,9 @@ Then provide:
 - 3 areas for improvement (brief, specific)
 - A verdict: one of STRONG_HIRE, HIRE, MAYBE, NO_HIRE
 
+CRITICAL REQUIREMENT:
+You MUST write all descriptive text (summary, strengths, improvements) in strictly ${langName}. Do NOT use any other language for these fields.
+
 RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact schema:
 {
   "overallScore": <number 0-100>,
@@ -49,14 +54,25 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
     {"name": "Problem Solving", "score": <number>},
     {"name": "Communication", "score": <number>}
   ],
-  "summary": "<string>",
-  "strengths": ["<string>", "<string>", "<string>"],
-  "improvements": ["<string>", "<string>", "<string>"],
+  "summary": "<string in ${langName}>",
+  "strengths": ["<string in ${langName}>", "<string in ${langName}>", "<string in ${langName}>"],
+  "improvements": ["<string in ${langName}>", "<string in ${langName}>", "<string in ${langName}>"],
   "verdict": "<STRONG_HIRE|HIRE|MAYBE|NO_HIRE>"
 }`
 
   try {
-    const result = await model.generateContent(prompt)
+    let result;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        result = await model.generateContent(prompt)
+        break;
+      } catch (err) {
+        retries--;
+        if (retries === 0) throw err;
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
     const text = result.response.text().trim()
     // Try to extract JSON even if wrapped in markdown fences
     const jsonMatch = text.match(/\{[\s\S]*\}/)

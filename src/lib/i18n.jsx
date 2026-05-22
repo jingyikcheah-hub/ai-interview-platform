@@ -121,6 +121,14 @@ const translations = {
     'common.confirm': 'Confirm',
     'common.save': 'Save',
     'common.delete': 'Delete',
+
+    // Dimensions
+    'dim.ad': 'Architecture Design',
+    'dim.cf': 'Core Fundamentals',
+    'dim.sa': 'Security Awareness',
+    'dim.cq': 'Code Quality',
+    'dim.ps': 'Problem Solving',
+    'dim.c': 'Communication',
   },
   cn: {
     'brand.name': 'CyberVett',
@@ -232,6 +240,14 @@ const translations = {
     'common.confirm': '确认',
     'common.save': '保存',
     'common.delete': '删除',
+
+    // Dimensions
+    'dim.ad': '架构设计',
+    'dim.cf': '核心基础',
+    'dim.sa': '安全意识',
+    'dim.cq': '代码质量',
+    'dim.ps': '问题解决',
+    'dim.c': '沟通能力',
   }
 }
 

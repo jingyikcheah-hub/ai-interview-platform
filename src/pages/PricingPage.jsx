@@ -1,6 +1,9 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/lib/i18n'
 
@@ -55,6 +58,8 @@ const plans = [
 export default function PricingPage() {
   const { user, loginWithGithub } = useAuth()
   const { t, lang } = useI18n()
+  const navigate = useNavigate()
+  const [isWarningOpen, setIsWarningOpen] = useState(false)
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -120,10 +125,20 @@ export default function PricingPage() {
                           : 'bg-secondary hover:bg-secondary/80'
                       }`}
                       onClick={() => {
-                        if (!user) loginWithGithub()
+                        alert('TEST: Button Clicked! ' + plan.key);
+                        console.log('Pricing button clicked:', plan.key, 'User:', user)
+                        if (plan.key === 'free') {
+                          if (user) {
+                            window.location.href = '/dashboard'
+                          } else {
+                            window.location.href = '/#auth-section'
+                          }
+                        } else {
+                          setIsWarningOpen(true)
+                        }
                       }}
                     >
-                      {t(`pricing.cta.${plan.key}`)}
+                      {t(`pricing.cta.${plan.key}`)} 🚨
                     </Button>
                   </div>
                 </CardContent>
@@ -166,6 +181,28 @@ export default function PricingPage() {
           </div>
         </motion.div>
       </div>
+
+      <Dialog open={isWarningOpen} onOpenChange={setIsWarningOpen}>
+        <DialogContent className="sm:max-w-[425px] glass-panel border-white/10">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-warning">
+              <i className="fa-solid fa-triangle-exclamation" />
+              {lang === 'cn' ? '系统提示 (Warning Notice)' : 'Warning Notice'}
+            </DialogTitle>
+            <DialogDescription className="hidden">
+              This is a sandbox mode warning notice.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 text-center text-muted-foreground">
+            {lang === 'cn' ? '支付网关目前处于沙盒模式，高级计划暂未开放购买。感谢您的支持意向！' : 'Payment gateway is currently in sandbox mode. Premium plans are not available for purchase yet. Thank you for your interest!'}
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setIsWarningOpen(false)}>
+              {t('common.confirm')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

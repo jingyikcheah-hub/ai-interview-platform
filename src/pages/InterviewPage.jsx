@@ -11,7 +11,7 @@ export default function InterviewPage() {
   const { sessionId: urlSessionId } = useParams()
   const { user } = useAuth()
   const { sessionId, isActive, messages, config, antiCheatLog, endInterview } = useInterview()
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const navigate = useNavigate()
   const [isGeneratingReport, setIsGeneratingReport] = useState(false)
 
@@ -38,7 +38,7 @@ export default function InterviewPage() {
     setIsGeneratingReport(true)
     try {
       // Generate AI evaluation
-      const evaluation = await generateEvaluation(finalMessages, config.resumeContext)
+      const evaluation = await generateEvaluation(finalMessages, config.resumeContext, lang)
 
       // Save to Supabase
       const { error } = await supabase.from('interview_reports').insert([{

@@ -65,15 +65,21 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
   }, [messages, isLoading, scrollToBottom])
 
   // --- Session initialization ---
+  const hasGreeted = useRef(false)
+  
   useEffect(() => {
+    if (hasGreeted.current) return
+
     // If we have a session with messages, offer to resume
     if (sessionId && isActive && messages.length > 0) {
       setShowResumePrompt(true)
+      hasGreeted.current = true
       return
     }
 
     // Session was just started by DashboardPage but has no messages yet — add greeting
     if (sessionId && isActive && messages.length === 0) {
+      hasGreeted.current = true
       const rc = resumeContext || config?.resumeContext || ''
       const greeting = rc
         ? `${t('interview.greeting')}\n\n> ${t('interview.resume.notice')} *"${rc}"*`
@@ -128,13 +134,25 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
     setIsLoading(true)
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
       // Build prompt with FULL conversation history
       const currentMessages = [...messages, { role: 'user', text: textToSend, timestamp: Date.now() }]
       const prompt = buildInterviewPrompt(textToSend, resumeContext || config?.resumeContext || '', currentMessages)
 
-      const result = await model.generateContent(prompt)
+      let result;
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          result = await model.generateContent(prompt)
+          break; // Success
+        } catch (err) {
+          retries--;
+          if (retries === 0) throw err;
+          // Wait 2 seconds before retrying (helps with 429 Rate Limit errors)
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
       const aiText = result.response.text()
       addMessage('ai', aiText)
     } catch (error) {
