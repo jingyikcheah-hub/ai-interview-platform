@@ -68,12 +68,15 @@ export default function DashboardPage() {
     if (!newTitle || !newOrganizer || !newDescription) return
     setIsSubmitting(true)
     
+    let dbError = null;
+
     if (editingEventId) {
       const { error } = await supabase.from('events').update({
         title: newTitle,
         organizer: newOrganizer,
         description: newDescription,
       }).eq('id', editingEventId)
+      dbError = error;
     } else {
       const { error } = await supabase.from('events').insert([{
         title: newTitle,
@@ -81,9 +84,17 @@ export default function DashboardPage() {
         description: newDescription,
         author_email: user?.email || '',
       }])
+      dbError = error;
     }
     
     setIsSubmitting(false)
+    
+    if (dbError) {
+      console.error('Supabase Error:', dbError)
+      alert('Failed to save event. Database error: ' + dbError.message)
+      return // Do not close dialog on error
+    }
+
     setIsDialogOpen(false)
     setEditingEventId(null)
     setNewTitle('')
