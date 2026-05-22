@@ -125,8 +125,6 @@ export default function PricingPage() {
                           : 'bg-secondary hover:bg-secondary/80'
                       }`}
                       onClick={() => {
-                        alert('TEST: Button Clicked! ' + plan.key);
-                        console.log('Pricing button clicked:', plan.key, 'User:', user)
                         if (plan.key === 'free') {
                           if (user) {
                             window.location.href = '/dashboard'
@@ -138,7 +136,7 @@ export default function PricingPage() {
                         }
                       }}
                     >
-                      {t(`pricing.cta.${plan.key}`)} 🚨
+                      {t(`pricing.cta.${plan.key}`)}
                     </Button>
                   </div>
                 </CardContent>
@@ -193,8 +191,10 @@ export default function PricingPage() {
               This is a sandbox mode warning notice.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 text-center text-muted-foreground">
-            {lang === 'cn' ? '支付网关目前处于沙盒模式，高级计划暂未开放购买。感谢您的支持意向！' : 'Payment gateway is currently in sandbox mode. Premium plans are not available for purchase yet. Thank you for your interest!'}
+          <div className="py-6 text-center text-muted-foreground leading-relaxed">
+            {lang === 'cn' 
+              ? 'CyberVett 旗舰版目前处于内测阶段。如需升级体验，请加入内测候补名单或联系客服。' 
+              : 'CyberVett Pro is currently in private beta. Please join our waitlist or contact support to upgrade your account.'}
           </div>
           <div className="flex justify-end">
             <Button variant="outline" onClick={() => setIsWarningOpen(false)}>

@@ -19,7 +19,7 @@ const translations = {
 
     // Landing
     'landing.hero.title': 'Vet Engineers.',
-    'landing.hero.title2': 'Not Résumés.',
+    'landing.hero.title2': 'Not Resumes.',
     'landing.hero.subtitle': 'AI-driven deep technical interviews that expose real engineering ability. Radar-scored reports. Anti-cheat monitoring. Zero bias.',
     'landing.hero.cta': 'Start Free Assessment',
     'landing.hero.cta2': 'Enterprise Demo',
