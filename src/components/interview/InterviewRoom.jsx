@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { useInterview } from '@/contexts/InterviewContext'
 import { useI18n } from '@/lib/i18n'
 import { buildInterviewPrompt } from '@/lib/aiEvaluator'
@@ -12,9 +11,6 @@ import ChatMessage from './ChatMessage'
 import CodeEditor from './CodeEditor'
 import CyberLoadingScreen from '../effects/CyberLoadingScreen'
 import InterviewToolbar from './InterviewToolbar'
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ''
-const genAI = new GoogleGenerativeAI(apiKey)
 
 /**
  * InterviewRoom — The core CyberVett interview experience.
@@ -134,31 +130,29 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
     setIsLoading(true)
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-
       // Build prompt with FULL conversation history
       const currentMessages = [...messages, { role: 'user', text: textToSend, timestamp: Date.now() }]
       const prompt = buildInterviewPrompt(textToSend, resumeContext || config?.resumeContext || '', currentMessages)
 
-      let result;
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          result = await model.generateContent(prompt)
-          break; // Success
-        } catch (err) {
-          retries--;
-          if (retries === 0) throw err;
-          // Wait 2 seconds before retrying (helps with 429 Rate Limit errors)
-          await new Promise(r => setTimeout(r, 2000));
-        }
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch from backend API')
       }
-      const aiText = result.response.text()
-      addMessage('ai', aiText)
+
+      addMessage('ai', data.text)
     } catch (error) {
       console.error('AI response error:', error)
-      const errorMsg = error.message?.includes('API key')
-        ? 'API key configuration error. Please check VITE_GEMINI_API_KEY.'
+      const errorMsg = error.message?.includes('API key configuration error')
+        ? 'API key configuration error. Please check GEMINI_API_KEY in Vercel settings.'
         : `${t('interview.reconnect')} — ${t('common.retry')}`
       addMessage('ai', errorMsg)
     } finally {

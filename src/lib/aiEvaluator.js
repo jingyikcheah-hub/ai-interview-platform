@@ -1,15 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ''
-const genAI = new GoogleGenerativeAI(apiKey)
-
 /**
  * After an interview ends, send the full conversation history to Gemini
  * and request a structured JSON evaluation.
  */
 export async function generateEvaluation(messages, resumeContext = '', lang = 'en') {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-
   const chatHistory = messages.map((m, i) => 
     `[${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}] (Round ${Math.ceil((i+1)/2)}): ${m.text}`
   ).join('\n\n')
@@ -61,19 +54,22 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
 }`
 
   try {
-    let result;
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        result = await model.generateContent(prompt)
-        break;
-      } catch (err) {
-        retries--;
-        if (retries === 0) throw err;
-        await new Promise(r => setTimeout(r, 2000));
-      }
+    const response = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch from backend API')
     }
-    const text = result.response.text().trim()
+
+    const text = data.text.trim()
+    
     // Try to extract JSON even if wrapped in markdown fences
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('No JSON object found in AI response')
