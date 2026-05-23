@@ -7,6 +7,16 @@ import RadarChart from './RadarChart'
 import IntegrityBadge from './IntegrityBadge'
 import ChatMessage from '../interview/ChatMessage'
 
+const DIMENSION_I18N = {
+  'Architecture Design': { en: 'Architecture Design', cn: '架构设计' },
+  'Core Fundamentals': { en: 'Core Fundamentals', cn: '核心基础' },
+  'Security Awareness': { en: 'Security Awareness', cn: '安全意识' },
+  'Code Quality': { en: 'Code Quality', cn: '代码质量' },
+  'Problem Solving': { en: 'Problem Solving', cn: '问题解决' },
+  'Communication': { en: 'Communication', cn: '沟通表达' },
+  'Culture Fit': { en: 'Culture Fit', cn: '文化匹配' },
+}
+
 /* ------------------------------------------------------------------ */
 /*  Verdict styling map                                                */
 /* ------------------------------------------------------------------ */
@@ -90,7 +100,7 @@ function ScoreRing({ score }) {
 /*  ReportCard                                                         */
 /* ------------------------------------------------------------------ */
 function ReportCard({ report }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [showTranscript, setShowTranscript] = useState(false)
 
   if (!report) return null
@@ -191,7 +201,7 @@ function ReportCard({ report }) {
             {dimensions.map((dim, i) => (
               <div key={i} className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-card/40 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-white/90">{dim.name}</span>
+                  <span className="text-sm font-bold text-white/90">{DIMENSION_I18N[dim.name]?.[lang || 'en'] || dim.name}</span>
                   <span className="font-mono text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">{dim.score}/100</span>
                 </div>
                 {dim.rationale && (
@@ -303,7 +313,7 @@ function ReportCard({ report }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-primary flex items-center gap-2">
                 <i className="fa-regular fa-envelope" />
-                Message from the CTO
+                {lang === 'cn' ? 'CTO 的来信' : 'Message from the CTO'}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -329,7 +339,7 @@ function ReportCard({ report }) {
                 size="sm"
                 onClick={() => setShowTranscript((prev) => !prev)}
               >
-                {showTranscript ? '▲ Collapse' : '▼ Expand'}
+                {showTranscript ? (lang === 'cn' ? '▲ 收起' : '▲ Collapse') : (lang === 'cn' ? '▼ 展开' : '▼ Expand')}
               </Button>
             </CardHeader>
 

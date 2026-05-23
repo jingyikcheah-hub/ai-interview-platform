@@ -15,7 +15,8 @@ const ABBREV_MAP = {
   'Security Awareness': 'SA',
   'Code Quality': 'CQ',
   'Problem Solving': 'PS',
-  'Communication': 'C'
+  'Communication': 'C',
+  'Culture Fit': 'CUL'
 }
 
 const DIM_TRANSLATION_KEYS = {
@@ -24,7 +25,8 @@ const DIM_TRANSLATION_KEYS = {
   'Security Awareness': 'dim.sa',
   'Code Quality': 'dim.cq',
   'Problem Solving': 'dim.ps',
-  'Communication': 'dim.c'
+  'Communication': 'dim.c',
+  'Culture Fit': 'dim.cult'
 }
 
 /**

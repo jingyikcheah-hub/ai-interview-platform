@@ -129,6 +129,7 @@ const translations = {
     'dim.cq': 'Code Quality',
     'dim.ps': 'Problem Solving',
     'dim.c': 'Communication',
+    'dim.cult': 'Culture Fit',
   },
   cn: {
     'brand.name': 'CyberVett',
@@ -248,6 +249,7 @@ const translations = {
     'dim.cq': '代码质量',
     'dim.ps': '问题解决',
     'dim.c': '沟通能力',
+    'dim.cult': '文化匹配',
   }
 }
 
