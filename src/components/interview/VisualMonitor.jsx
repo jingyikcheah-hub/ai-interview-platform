@@ -1,99 +1,84 @@
 import { useState, useEffect, useRef } from 'react'
-import * as faceapi from 'face-api.js'
 import { useI18n } from '@/lib/i18n'
 
 export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
   const { lang } = useI18n()
   const videoRef = useRef(null)
+  const canvasRef = useRef(null)
   
-  // Real metrics states
+  // Real metrics states from backend
   const [focus, setFocus] = useState(100)
   const [stress, setStress] = useState(0)
   const [emotion, setEmotion] = useState('Neutral')
   const [gaze, setGaze] = useState('Centered')
-  const [isModelsLoaded, setIsModelsLoaded] = useState(false)
+  const [isCameraReady, setIsCameraReady] = useState(false)
   
   const [metricsHistory, setMetricsHistory] = useState({ focus: [], stress: [] })
 
   useEffect(() => {
     let stream = null
-    let detectionInterval = null
 
-    async function loadModelsAndStart() {
+    async function startCamera() {
       try {
-        // Load face-api models from public/models directory
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceExpressionNet.loadFromUri('/models')
-        ])
-        setIsModelsLoaded(true)
-        
-        // Start camera
         stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
         if (videoRef.current) {
           videoRef.current.srcObject = stream
         }
+        setIsCameraReady(true)
       } catch (err) {
-        console.error('Failed to initialize visual monitoring:', err)
+        console.error('Failed to access camera:', err)
       }
     }
 
-    loadModelsAndStart()
+    startCamera()
 
     return () => {
-      if (detectionInterval) clearInterval(detectionInterval)
       if (stream) {
         stream.getTracks().forEach(track => track.stop())
       }
     }
   }, [])
 
-  // Handle video play - start detection loop
+  // Handle video play - start sending frames to backend
   const handleVideoPlay = () => {
     const interval = setInterval(async () => {
-      if (!videoRef.current || !isModelsLoaded) return
+      if (!videoRef.current || !canvasRef.current || !isCameraReady) return
+
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      const context = canvas.getContext('2d')
+      
+      // Ensure canvas matches video dimensions
+      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+      }
+
+      // Draw current frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+      
+      // Convert to Base64 JPEG
+      const base64Image = canvas.toDataURL('image/jpeg', 0.7)
 
       try {
-        const detection = await faceapi.detectSingleFace(
-          videoRef.current, 
-          new faceapi.TinyFaceDetectorOptions()
-        ).withFaceExpressions()
+        const response = await fetch('http://localhost:8000/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64Image })
+        })
 
-        let newFocus = 100
-        let newStress = 0
-        let newEmotion = 'Neutral'
-        let newGaze = 'Centered'
+        if (!response.ok) throw new Error('Backend analysis failed')
 
-        if (detection) {
-          // Face detected
-          const expressions = detection.expressions
-          
-          // Find dominant emotion
-          const dominantExpression = Object.keys(expressions).reduce((a, b) => 
-            expressions[a] > expressions[b] ? a : b
-          )
-          
-          newEmotion = dominantExpression.charAt(0).toUpperCase() + dominantExpression.slice(1)
+        const data = await response.json()
 
-          // Calculate stress based on negative emotions
-          const stressLevel = (expressions.angry || 0) + (expressions.fearful || 0) + (expressions.sad || 0) + (expressions.disgusted || 0)
-          newStress = Math.min(100, Math.round(stressLevel * 100))
-          
-          // Focus is high if neutral or happy, drops slightly if stressed
-          const focusLevel = (expressions.neutral || 0) + (expressions.happy || 0)
-          newFocus = Math.min(100, Math.max(0, Math.round(focusLevel * 100) - (newStress / 2)))
-          
-        } else {
-          // No face detected -> Off screen
-          newGaze = 'Off-Screen'
-          newFocus = 10
-          newStress = 50 // Ambiguous stress when not seen
-          newEmotion = 'Unknown'
-        }
+        const newEmotion = data.emotion || 'Neutral'
+        const newStress = data.stress ?? 0
+        const newFocus = data.focus ?? 100
+        const newGaze = data.gaze || 'Centered'
 
-        // Smooth transitions (EMA)
+        // Smooth transitions
         setFocus(prev => Math.round(prev * 0.5 + newFocus * 0.5))
-        setStress(prev => Math.round(prev * 0.7 + newStress * 0.3)) // slower stress decay
+        setStress(prev => Math.round(prev * 0.7 + newStress * 0.3))
         setEmotion(newEmotion)
         setGaze(newGaze)
 
@@ -104,7 +89,6 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
             stress: [...prev.stress, newStress]
           }
           
-          // Only send updates periodically or use the entire array to compute average later
           const avgFocus = Math.round(updated.focus.reduce((a, b) => a + b, 0) / updated.focus.length)
           const avgStress = Math.round(updated.stress.reduce((a, b) => a + b, 0) / updated.stress.length)
           
@@ -119,23 +103,26 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
         })
 
       } catch (err) {
-        // Ignored to prevent spamming console
+        // Backend might be off or failed to process, fallback to generic state
+        setGaze('Offline')
       }
-    }, 1500) // 1.5 seconds per detection to save CPU
+    }, 1500) // Send a frame every 1.5 seconds
     
-    // Store interval to clear it on unmount
     return () => clearInterval(interval)
   }
 
   return (
     <div className={`relative overflow-hidden rounded-lg border border-primary/30 bg-black shadow-[0_0_15px_rgba(56,136,255,0.2)] flex items-center justify-center ${className}`}>
       
-      {!isModelsLoaded && (
+      {!isCameraReady && (
         <div className="absolute z-10 flex flex-col items-center justify-center text-primary font-mono text-xs animate-pulse">
-          <i className="fa-solid fa-microchip mb-2 text-xl" />
-          <span>LOADING AI CORE...</span>
+          <i className="fa-solid fa-camera mb-2 text-xl" />
+          <span>INITIALIZING...</span>
         </div>
       )}
+
+      {/* Hidden canvas for capturing frames */}
+      <canvas ref={canvasRef} className="hidden" />
 
       {/* Video Feed */}
       <video
@@ -144,16 +131,14 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
         autoPlay
         playsInline
         muted
-        className={`w-full h-full object-cover transition-opacity duration-1000 ${isModelsLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`w-full h-full object-cover transition-opacity duration-1000 ${isCameraReady ? 'opacity-100' : 'opacity-0'}`}
       />
 
       {/* Cyberpunk Scanner Overlay */}
-      {isModelsLoaded && (
+      {isCameraReady && (
         <div className="absolute inset-0 pointer-events-none">
-          {/* Scan line */}
           <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/50 shadow-[0_0_10px_#3888ff] animate-[scan-line_3s_linear_infinite]" />
           
-          {/* Reticle / Face box */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-32 border border-primary/40 rounded-sm transition-all duration-300" style={{ opacity: gaze === 'Centered' ? 1 : 0.3, borderColor: gaze === 'Centered' ? '' : '#ef4444' }}>
             <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-current" />
             <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-current" />
@@ -161,7 +146,6 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
             <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-current" />
           </div>
 
-          {/* HUD Data Overlay */}
           <div className="absolute top-2 left-2 text-[10px] font-mono text-primary/80 uppercase tracking-widest leading-tight">
             <div className="mb-1 bg-primary/20 px-1 inline-block text-primary">SYS.V-MONITOR</div>
             <div>{lang === 'en' ? 'TGT.LCK' : '目标锁定'}</div>
@@ -186,7 +170,7 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
             </div>
 
             <div className="text-right space-y-1 shrink-0">
-              <div className={`${gaze === 'Off-Screen' ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}>
+              <div className={`${(gaze === 'Off-Screen' || gaze === 'Offline') ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}>
                 [{gaze}]
               </div>
               <div className="text-primary font-bold uppercase">
