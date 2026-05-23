@@ -144,7 +144,7 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
         autoPlay
         playsInline
         muted
-        className={`w-full h-full object-cover mix-blend-screen filter grayscale contrast-125 transition-opacity duration-1000 ${isModelsLoaded ? 'opacity-60' : 'opacity-0'}`}
+        className={`w-full h-full object-cover transition-opacity duration-1000 ${isModelsLoaded ? 'opacity-100' : 'opacity-0'}`}
       />
 
       {/* Cyberpunk Scanner Overlay */}
