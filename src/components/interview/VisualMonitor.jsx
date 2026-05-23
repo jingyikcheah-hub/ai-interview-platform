@@ -61,7 +61,10 @@ export default function VisualMonitor({ onMetricsUpdate, className = '' }) {
       const base64Image = canvas.toDataURL('image/jpeg', 0.7)
 
       try {
-        const response = await fetch('http://localhost:8000/analyze', {
+        // Use environment variable for production, fallback to localhost for local dev
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+        
+        const response = await fetch(`${backendUrl}/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image_base64: base64Image })
