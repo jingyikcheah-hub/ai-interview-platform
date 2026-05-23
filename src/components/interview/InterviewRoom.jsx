@@ -265,12 +265,14 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
       >
         <Card className="w-full h-full flex flex-col shadow-2xl shadow-primary/5 border border-white/5 overflow-hidden backdrop-blur-xl bg-card/80 rounded-2xl relative">
           
-          {/* Visual Monitor (Floating Top Right) */}
+          {/* Visual Monitor (Floating Top Right of Screen) */}
           {isActive && (
-            <VisualMonitor 
-              onMetricsUpdate={setVisualMetrics} 
-              className="absolute top-24 right-6 w-48 h-36 z-50 pointer-events-none opacity-80" 
-            />
+            <div className="fixed top-24 right-8 z-50 pointer-events-none">
+              <VisualMonitor 
+                onMetricsUpdate={setVisualMetrics} 
+                className="w-56 h-40 opacity-80 shadow-2xl" 
+              />
+            </div>
           )}
 
           {/* ═══ Header ═══ */}
