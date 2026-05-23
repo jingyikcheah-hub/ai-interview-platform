@@ -40,6 +40,18 @@ export default function DashboardPage() {
   // Session recovery
   const [recoverySessionId, setRecoverySessionId] = useState(null)
 
+  // System Health Simulation
+  const [latency, setLatency] = useState(214)
+  const [serverLoad, setServerLoad] = useState(28)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLatency(Math.floor(Math.random() * (260 - 180 + 1) + 180))
+      setServerLoad(Math.floor(Math.random() * (45 - 20 + 1) + 20))
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     fetchEvents()
     if (user) fetchReports()
@@ -286,11 +298,11 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'API Latency' : '接口延迟'}</div>
-                  <div className="text-sm font-mono font-bold text-white/90">214<span className="text-[10px] text-white/40 ml-0.5">ms</span></div>
+                  <div className="text-sm font-mono font-bold text-white/90">{latency}<span className="text-[10px] text-white/40 ml-0.5">ms</span></div>
                 </div>
                 <div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'Server Load' : '服务器负载'}</div>
-                  <div className="text-sm font-mono font-bold text-white/90">28<span className="text-[10px] text-white/40 ml-0.5">%</span></div>
+                  <div className="text-sm font-mono font-bold text-white/90">{serverLoad}<span className="text-[10px] text-white/40 ml-0.5">%</span></div>
                 </div>
                 <div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'Anti-Cheat Blocks' : '今日拦截作弊'}</div>
@@ -311,36 +323,38 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            reports.map((report) => (
-              <Card
-                key={report.id}
-                className="bg-card/40 border-l-4 border-l-primary border-y-white/5 border-r-white/5 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer"
-                onClick={() => navigate(`/report/${report.id}`)}
-              >
-                <CardHeader className="p-4 pb-2 flex-row justify-between items-start space-y-0">
-                  <div>
-                    <CardTitle className="text-sm font-bold">{t('report.title')}</CardTitle>
-                    {report.evaluation?.verdict && (
-                      <span className={`inline-block mt-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${getVerdictColor(report.evaluation.verdict)}`}>
-                        {t(`report.verdict.${report.evaluation.verdict}`)}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground bg-background/50 px-2 py-0.5 rounded border border-white/5">
-                    {new Date(report.created_at).toLocaleDateString()}
-                  </span>
-                </CardHeader>
-                <CardContent className="p-4 pt-2 flex items-center justify-between">
-                  <span className="text-2xl font-mono font-bold text-foreground">
-                    {report.evaluation?.overallScore || report.chat_history?.filter(m => m.role === 'user').length || 0}
-                    <span className="text-xs font-sans font-normal text-muted-foreground ml-1">
-                      {report.evaluation?.overallScore ? '/100' : t('dash.reports.rounds')}
+            <div className="max-h-[500px] overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+              {reports.map((report) => (
+                <Card
+                  key={report.id}
+                  className="bg-card/40 border-l-4 border-l-primary border-y-white/5 border-r-white/5 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer"
+                  onClick={() => navigate(`/report/${report.id}`)}
+                >
+                  <CardHeader className="p-4 pb-2 flex-row justify-between items-start space-y-0">
+                    <div>
+                      <CardTitle className="text-sm font-bold">{t('report.title')}</CardTitle>
+                      {report.evaluation?.verdict && (
+                        <span className={`inline-block mt-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${getVerdictColor(report.evaluation.verdict)}`}>
+                          {t(`report.verdict.${report.evaluation.verdict}`)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground bg-background/50 px-2 py-0.5 rounded border border-white/5">
+                      {new Date(report.created_at).toLocaleDateString()}
                     </span>
-                  </span>
-                  <i className="fa-solid fa-chevron-right text-muted-foreground text-xs" />
-                </CardContent>
-              </Card>
-            ))
+                  </CardHeader>
+                  <CardContent className="p-4 pt-2 flex items-center justify-between">
+                    <span className="text-2xl font-mono font-bold text-foreground">
+                      {report.evaluation?.overallScore || report.chat_history?.filter(m => m.role === 'user').length || 0}
+                      <span className="text-xs font-sans font-normal text-muted-foreground ml-1">
+                        {report.evaluation?.overallScore ? '/100' : t('dash.reports.rounds')}
+                      </span>
+                    </span>
+                    <i className="fa-solid fa-chevron-right text-muted-foreground text-xs" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </motion.div>
       </motion.div>
