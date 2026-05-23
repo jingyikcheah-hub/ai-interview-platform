@@ -11,6 +11,7 @@ import ChatMessage from './ChatMessage'
 import CodeEditor from './CodeEditor'
 import CyberLoadingScreen from '../effects/CyberLoadingScreen'
 import InterviewToolbar from './InterviewToolbar'
+import VisualMonitor from './VisualMonitor'
 
 /**
  * InterviewRoom — The core CyberVett interview experience.
@@ -45,6 +46,7 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
   const [inputMode, setInputMode] = useState('text') // 'text' | 'code'
   const [integrityScore, setIntegrityScore] = useState(100)
   const [showResumePrompt, setShowResumePrompt] = useState(false)
+  const [visualMetrics, setVisualMetrics] = useState(null)
 
   const messagesEndRef = useRef(null)
   const antiCheatRef = useRef(null)
@@ -185,9 +187,13 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
         ? antiCheatRef.current.getSummary()
         : { integrityScore: 100, tabSwitches: 0, pasteEvents: 0, windowBlurs: 0, totalAwayMs: 0 }
 
-      // Call parent handler to generate report & save
+      // Finish interview and pass everything to Dashboard
       if (onGenerateReport) {
-        await onGenerateReport(messages, antiCheatSummary)
+        const enhancedAntiCheat = {
+          ...antiCheatSummary,
+          visualMetrics
+        }
+        await onGenerateReport(messages, enhancedAntiCheat)
       }
     } catch (error) {
       console.error('Report generation failed:', error)
@@ -257,7 +263,16 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="w-full h-full"
       >
-        <Card className="w-full h-full flex flex-col shadow-2xl shadow-primary/5 border border-white/5 overflow-hidden backdrop-blur-xl bg-card/80 rounded-2xl">
+        <Card className="w-full h-full flex flex-col shadow-2xl shadow-primary/5 border border-white/5 overflow-hidden backdrop-blur-xl bg-card/80 rounded-2xl relative">
+          
+          {/* Visual Monitor (Floating Top Right) */}
+          {isActive && (
+            <VisualMonitor 
+              onMetricsUpdate={setVisualMetrics} 
+              className="absolute top-24 right-6 w-48 h-36 z-50 pointer-events-none opacity-80" 
+            />
+          )}
+
           {/* ═══ Header ═══ */}
           <CardHeader className="border-b border-white/5 px-6 py-4 flex flex-row justify-between items-center shrink-0 bg-background/50">
             <div className="flex items-center gap-4">

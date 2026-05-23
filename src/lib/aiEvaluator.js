@@ -2,7 +2,7 @@
  * After an interview ends, send the full conversation history to Gemini
  * and request a structured JSON evaluation.
  */
-export async function generateEvaluation(messages, resumeContext = '', lang = 'en') {
+export async function generateEvaluation(messages, resumeContext = '', lang = 'en', antiCheatSummary = null) {
   const chatHistory = messages.map((m, i) => 
     `[${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}] (Round ${Math.ceil((i+1)/2)}): ${m.text}`
   ).join('\n\n')
@@ -17,6 +17,12 @@ ${resumeContext ? `[CANDIDATE PROFILE]: ${resumeContext}` : ''}
 [INTERVIEW TRANSCRIPT]:
 ${chatHistory}
 
+${antiCheatSummary?.visualMetrics ? `[VISUAL MONITORING REPORT]:
+- Average Focus: ${antiCheatSummary.visualMetrics.averageFocus}%
+- Average Stress: ${antiCheatSummary.visualMetrics.averageStress}%
+- Dominant Emotion: ${antiCheatSummary.visualMetrics.dominantEmotion}
+- Gaze Deviations: ${antiCheatSummary.visualMetrics.gazeDeviations}` : ''}
+
 [YOUR TASK]:
 Evaluate the candidate across these 6 dimensions (score 0-100 each). FOR EACH DIMENSION, you MUST provide a 1-sentence \`rationale\` referencing specific moments in the transcript to justify the score. 
 If the interview is extremely short (e.g. candidate only said "hello"), score them 0 for all technical dimensions and state "Interview was incomplete or candidate did not answer technical questions" in the rationale.
@@ -24,9 +30,9 @@ If the interview is extremely short (e.g. candidate only said "hello"), score th
 2. Core Fundamentals - data structures, algorithms, CS theory, language mastery
 3. Security Awareness - vulnerability recognition, secure coding, threat modeling
 4. Code Quality - readability, naming, testing mindset, documentation
-5. Problem Solving - debugging approach, analytical thinking, edge case handling
-6. Communication - clarity of explanation, structured thinking, asking good questions
-7. Culture Fit - resilience under pressure, openness to feedback, passion for cybersecurity
+5. Problem Solving - debugging approach, resilience, ability to learn from hints
+6. Communication - clarity, structure, professionalism
+7. Culture Fit - resilience under pressure, openness to feedback, geek passion, emotional stability (Note: Refer to the [VISUAL MONITORING REPORT] if available to justify their focus, stress, or emotional state during the interview).
 
 Then provide:
 - An overall score (weighted average, security and fundamentals weighted higher)

@@ -38,7 +38,7 @@ export default function InterviewPage() {
     setIsGeneratingReport(true)
     try {
       // Generate AI evaluation
-      const evaluation = await generateEvaluation(finalMessages, config.resumeContext, lang)
+      const evaluation = await generateEvaluation(finalMessages, config.resumeContext, lang, antiCheatSummary)
 
       // Save to Supabase
       const { error } = await supabase.from('interview_reports').insert([{
