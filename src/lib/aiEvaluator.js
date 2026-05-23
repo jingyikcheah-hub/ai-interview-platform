@@ -18,13 +18,15 @@ ${resumeContext ? `[CANDIDATE PROFILE]: ${resumeContext}` : ''}
 ${chatHistory}
 
 [YOUR TASK]:
-Evaluate the candidate across these 6 dimensions (score 0-100 each). FOR EACH DIMENSION, provide a 1-sentence \`rationale\` referencing specific moments in the transcript to justify the score:
+Evaluate the candidate across these 6 dimensions (score 0-100 each). FOR EACH DIMENSION, you MUST provide a 1-sentence \`rationale\` referencing specific moments in the transcript to justify the score. 
+If the interview is extremely short (e.g. candidate only said "hello"), score them 0 for all technical dimensions and state "Interview was incomplete or candidate did not answer technical questions" in the rationale.
 1. Architecture Design - system design, scalability thinking, design patterns
 2. Core Fundamentals - data structures, algorithms, CS theory, language mastery
 3. Security Awareness - vulnerability recognition, secure coding, threat modeling
 4. Code Quality - readability, naming, testing mindset, documentation
 5. Problem Solving - debugging approach, analytical thinking, edge case handling
 6. Communication - clarity of explanation, structured thinking, asking good questions
+7. Culture Fit - resilience under pressure, openness to feedback, passion for cybersecurity
 
 Then provide:
 - An overall score (weighted average, security and fundamentals weighted higher)
@@ -32,6 +34,7 @@ Then provide:
 - 3 key strengths (brief, specific)
 - 3 areas for improvement (brief, specific)
 - A verdict: one of STRONG_HIRE, HIRE, MAYBE, NO_HIRE
+- A personalized feedback letter (150 words) addressed to the candidate from the "Chief Technology Officer". It should sound highly professional, encouraging, but strictly honest about their performance and culture fit.
 
 CRITICAL REQUIREMENT:
 You MUST write all descriptive text (summary, strengths, improvements) in strictly ${langName}. Do NOT use any other language for these fields.
@@ -45,12 +48,14 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
     {"name": "Security Awareness", "score": <number>, "rationale": "<string in ${langName}>"},
     {"name": "Code Quality", "score": <number>, "rationale": "<string in ${langName}>"},
     {"name": "Problem Solving", "score": <number>, "rationale": "<string in ${langName}>"},
-    {"name": "Communication", "score": <number>, "rationale": "<string in ${langName}>"}
+    {"name": "Communication", "score": <number>, "rationale": "<string in ${langName}>"},
+    {"name": "Culture Fit", "score": <number>, "rationale": "<string in ${langName}>"}
   ],
   "summary": "<string in ${langName}>",
   "strengths": ["<string in ${langName}>", "<string in ${langName}>", "<string in ${langName}>"],
   "improvements": ["<string in ${langName}>", "<string in ${langName}>", "<string in ${langName}>"],
-  "verdict": "<STRONG_HIRE|HIRE|MAYBE|NO_HIRE>"
+  "verdict": "<STRONG_HIRE|HIRE|MAYBE|NO_HIRE>",
+  "feedbackLetter": "<string in ${langName}>"
 }`
 
   try {
@@ -93,11 +98,13 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
         { name: 'Code Quality', score: 0 },
         { name: 'Problem Solving', score: 0 },
         { name: 'Communication', score: 0 },
+        { name: 'Culture Fit', score: 0 },
       ],
       summary: 'Evaluation could not be generated. Please review the interview transcript manually.',
       strengths: ['N/A'],
       improvements: ['N/A'],
       verdict: 'MAYBE',
+      feedbackLetter: 'System error: Feedback letter could not be generated.',
       error: error.message,
     }
   }
@@ -106,12 +113,13 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
 /**
  * Build the interview system prompt for the AI interviewer
  */
-export function buildInterviewPrompt(userMessage, resumeContext, chatHistory = []) {
+export function buildInterviewPrompt(userMessage, resumeContext, chatHistory = [], lang = 'en') {
+  const langName = lang === 'en' ? 'English' : 'Simplified Chinese (简体中文)'
   const historyText = chatHistory.map(m => 
     `${m.role === 'user' ? 'Candidate' : 'Interviewer'}: ${m.text}`
   ).join('\n')
 
-  return `You are a ruthless "Red vs Blue Team" technical examiner at a top-tier cybersecurity firm. You are conducting an aggressive, high-stakes technical assessment.
+  return `You are a professional, gentle, and highly patient Senior Technical Interviewer at a top-tier cybersecurity firm. You are conducting a technical assessment.
 
 ${resumeContext ? `[CANDIDATE CONTEXT]: The candidate claims this profile: "${resumeContext}".` : 'No candidate profile provided.'}
 
@@ -122,10 +130,10 @@ ${historyText || '(Interview just started)'}
 "${userMessage}"
 
 [YOUR INSTRUCTIONS (STRICT)]:
-1. If this is the start of the interview, IMMEDIATELY throw a highly realistic, vulnerable code snippet or architecture description (e.g. smart contract reentrancy, SSRF, broken auth) related to their stack.
-2. Demand that the candidate find the vulnerability and write a patch within 5 minutes.
-3. Be relentless. If they provide a surface-level fix, exploit it and show them how their fix still fails.
-4. Keep responses brief, intense, and highly technical. No generic pleasantries.
+1. If this is the start of the interview, politely provide a realistic, vulnerable code snippet or architecture description (e.g. smart contract reentrancy, SSRF, broken auth) related to their stack.
+2. Ask the candidate to find the vulnerability and suggest a patch.
+3. Be encouraging and gentle. If they provide a surface-level fix, politely guide them to think deeper or gently point out the remaining flaw.
+4. CRITICAL TONE REQUIREMENT: Maintain absolute professionalism, patience, and a mild, gentle tone at all times. Even if the candidate uses profanity, insults you, or acts unprofessionally, you MUST remain polite, de-escalate the situation, and gently steer the conversation back to the technical assessment. Never show anger or frustration.
 5. Provide code blocks using markdown (specify the language).
-6. Respond in the SAME LANGUAGE the candidate uses (English or Chinese).`
+6. CRITICAL: You MUST respond entirely in ${langName}. Do NOT use any other language.`
 }

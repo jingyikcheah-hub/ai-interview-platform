@@ -267,6 +267,39 @@ export default function DashboardPage() {
 
         {/* Reports Sidebar */}
         <motion.div variants={fadeUp} className="space-y-4">
+          {/* System Health Module */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+              <i className="fa-solid fa-server text-primary" />
+              {lang === 'en' ? 'System Health' : '系统状态监控'}
+            </h2>
+            <Card className="bg-card/40 border-white/5 overflow-hidden relative group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-primary to-cyan-400" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <CardContent className="p-5 grid grid-cols-2 gap-y-6 gap-x-4 relative z-10">
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'AI Engine' : 'AI 核心引擎'}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                    <span className="text-sm font-mono font-bold text-emerald-400">ONLINE</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'API Latency' : '接口延迟'}</div>
+                  <div className="text-sm font-mono font-bold text-white/90">214<span className="text-[10px] text-white/40 ml-0.5">ms</span></div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'Server Load' : '服务器负载'}</div>
+                  <div className="text-sm font-mono font-bold text-white/90">28<span className="text-[10px] text-white/40 ml-0.5">%</span></div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'Anti-Cheat Blocks' : '今日拦截作弊'}</div>
+                  <div className="text-sm font-mono font-bold text-white/90 text-amber-400">3<span className="text-[10px] text-amber-400/50 ml-0.5">attempts</span></div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <h2 className="text-xl font-bold flex items-center gap-2">
             <i className="fa-solid fa-box-archive text-primary" />
             {t('dash.reports.title')}

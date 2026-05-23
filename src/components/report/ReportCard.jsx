@@ -111,6 +111,7 @@ function ReportCard({ report }) {
     strengths = [],
     improvements = [],
     verdict = 'MAYBE',
+    feedbackLetter = '',
   } = evaluation
 
   const {
@@ -293,6 +294,26 @@ function ReportCard({ report }) {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* ====== 6.5 Personalized Feedback Letter ====== */}
+      {feedbackLetter && (
+        <motion.div variants={item}>
+          <Card className="border-primary/20 bg-primary/5 backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-primary/50" />
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-primary flex items-center gap-2">
+                <i className="fa-regular fa-envelope" />
+                Message from the CTO
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-background/40 p-4 rounded-lg border border-white/5 shadow-inner font-serif text-sm italic text-white/80 leading-relaxed whitespace-pre-line">
+                "{feedbackLetter}"
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* ====== 7. Transcript Toggle ====== */}
       {chat_history.length > 0 && (

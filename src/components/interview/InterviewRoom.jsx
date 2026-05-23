@@ -23,7 +23,7 @@ import InterviewToolbar from './InterviewToolbar'
  * }} props
  */
 export default function InterviewRoom({ onExit, userEmail, resumeContext = '', onGenerateReport }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const {
     messages,
     isActive,
@@ -132,7 +132,7 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
     try {
       // Build prompt with FULL conversation history
       const currentMessages = [...messages, { role: 'user', text: textToSend, timestamp: Date.now() }]
-      const prompt = buildInterviewPrompt(textToSend, resumeContext || config?.resumeContext || '', currentMessages)
+      const prompt = buildInterviewPrompt(textToSend, resumeContext || config?.resumeContext || '', currentMessages, lang)
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
