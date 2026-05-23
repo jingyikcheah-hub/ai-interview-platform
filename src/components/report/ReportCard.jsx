@@ -171,9 +171,9 @@ function ReportCard({ report }) {
         </Card>
       </motion.div>
 
-      {/* ====== 2. Radar Chart ====== */}
+      {/* ====== 2. Radar Chart & Explanations ====== */}
       {dimensions.length > 0 && (
-        <motion.div variants={item}>
+        <motion.div variants={item} className="flex flex-col gap-4">
           <Card className="border-white/5 bg-card/60 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="text-sm text-white/70">
@@ -184,6 +184,21 @@ function ReportCard({ report }) {
               <RadarChart dimensions={dimensions} />
             </CardContent>
           </Card>
+
+          {/* Render Explanations */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {dimensions.map((dim, i) => (
+              <div key={i} className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-card/40 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-white/90">{dim.name}</span>
+                  <span className="font-mono text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">{dim.score}/100</span>
+                </div>
+                {dim.rationale && (
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">{dim.rationale}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </motion.div>
       )}
 

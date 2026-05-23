@@ -18,7 +18,7 @@ ${resumeContext ? `[CANDIDATE PROFILE]: ${resumeContext}` : ''}
 ${chatHistory}
 
 [YOUR TASK]:
-Evaluate the candidate across these 6 dimensions (score 0-100 each):
+Evaluate the candidate across these 6 dimensions (score 0-100 each). FOR EACH DIMENSION, provide a 1-sentence \`rationale\` referencing specific moments in the transcript to justify the score:
 1. Architecture Design - system design, scalability thinking, design patterns
 2. Core Fundamentals - data structures, algorithms, CS theory, language mastery
 3. Security Awareness - vulnerability recognition, secure coding, threat modeling
@@ -40,12 +40,12 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
 {
   "overallScore": <number 0-100>,
   "dimensions": [
-    {"name": "Architecture Design", "score": <number>},
-    {"name": "Core Fundamentals", "score": <number>},
-    {"name": "Security Awareness", "score": <number>},
-    {"name": "Code Quality", "score": <number>},
-    {"name": "Problem Solving", "score": <number>},
-    {"name": "Communication", "score": <number>}
+    {"name": "Architecture Design", "score": <number>, "rationale": "<string in ${langName}>"},
+    {"name": "Core Fundamentals", "score": <number>, "rationale": "<string in ${langName}>"},
+    {"name": "Security Awareness", "score": <number>, "rationale": "<string in ${langName}>"},
+    {"name": "Code Quality", "score": <number>, "rationale": "<string in ${langName}>"},
+    {"name": "Problem Solving", "score": <number>, "rationale": "<string in ${langName}>"},
+    {"name": "Communication", "score": <number>, "rationale": "<string in ${langName}>"}
   ],
   "summary": "<string in ${langName}>",
   "strengths": ["<string in ${langName}>", "<string in ${langName}>", "<string in ${langName}>"],
