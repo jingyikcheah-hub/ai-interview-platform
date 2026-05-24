@@ -40,16 +40,58 @@ export default function DashboardPage() {
   // Session recovery
   const [recoverySessionId, setRecoverySessionId] = useState(null)
 
-  // System Health Simulation
+  // System Health
   const [latency, setLatency] = useState(214)
   const [serverLoad, setServerLoad] = useState(28)
+  const [cheatAttempts, setCheatAttempts] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLatency(Math.floor(Math.random() * (260 - 180 + 1) + 180))
+    const measureHealth = async () => {
+      // 1. Measure real latency to Supabase
+      const start = performance.now()
+      await supabase.from('interview_reports').select('id').limit(1)
+      setLatency(Math.floor(performance.now() - start))
+      
+      // 2. Simulated Server Load (Serverless environments don't expose this directly)
       setServerLoad(Math.floor(Math.random() * (45 - 20 + 1) + 20))
-    }, 3000)
-    return () => clearInterval(interval)
+    }
+
+    const fetchCheatStats = async () => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      const { data, error } = await supabase
+        .from('interview_reports')
+        .select('integrity')
+        .gte('created_at', today.toISOString())
+        
+      if (!error && data) {
+        const totalBlocks = data.reduce((sum, row) => {
+          const i = row.integrity || {}
+          return sum + (i.tabSwitches || 0) + (i.pasteEvents || 0) + (i.windowBlurs || 0)
+        }, 0)
+        setCheatAttempts(totalBlocks)
+      }
+    }
+
+    measureHealth()
+    fetchCheatStats()
+
+    const interval = setInterval(measureHealth, 5000)
+    
+    // Real-time subscription for anti-cheat updates
+    const channel = supabase.channel('realtime:dashboard_cheats')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'interview_reports' },
+        () => fetchCheatStats()
+      )
+      .subscribe()
+
+    return () => {
+      clearInterval(interval)
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   useEffect(() => {
@@ -306,7 +348,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{lang === 'en' ? 'Anti-Cheat Blocks' : '今日拦截作弊'}</div>
-                  <div className="text-sm font-mono font-bold text-white/90 text-amber-400">3<span className="text-[10px] text-amber-400/50 ml-0.5">attempts</span></div>
+                  <div className="text-sm font-mono font-bold text-white/90 text-amber-400">{cheatAttempts}<span className="text-[10px] text-amber-400/50 ml-0.5">attempts</span></div>
                 </div>
               </CardContent>
             </Card>
