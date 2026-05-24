@@ -67,6 +67,12 @@ const translations = {
     'interview.mode.code': 'Code',
     'interview.timer': 'Duration',
     'interview.round': 'Round',
+    'interview.code.clear': 'Clear',
+    'interview.code.run': 'Run',
+    'interview.code.submit': 'Submit Code',
+    'interview.code.output': 'Execution Output',
+    'interview.code.compile_error': 'Compile Error',
+    'interview.code.no_output': 'Program exited with no output.',
 
     // Report
     'report.title': 'Technical Assessment Report',
@@ -85,6 +91,37 @@ const translations = {
     'report.verdict.HIRE': 'HIRE',
     'report.verdict.MAYBE': 'MAYBE',
     'report.verdict.NO_HIRE': 'NO HIRE',
+
+    // Candidate Welcome
+    'candidate.welcome.title': 'AI Technical Interview',
+    'candidate.welcome.invited': 'You have been invited to interview for:',
+    'candidate.welcome.email': 'Your Email',
+    'candidate.welcome.privacy.title': 'Privacy Notice',
+    'candidate.welcome.privacy.desc': 'Your personal data is sanitized before evaluation. Audio and text inputs are analyzed in real-time by the AI Engine.',
+    'candidate.welcome.connecting': 'Connecting to AI...',
+    'candidate.welcome.enter': 'Enter Interview Room',
+    'candidate.welcome.start': 'Start Interview',
+    'candidate.welcome.verify.title': 'Identity Verification',
+    'candidate.welcome.verify.github': 'Verify with GitHub',
+    'candidate.welcome.verify.redirecting': 'Redirecting...',
+
+    // Candidate Feedback
+    'candidate.feedback.title': 'Interview Evaluation',
+    'candidate.feedback.letter': 'Letter from the CTO',
+    'candidate.feedback.strengths': 'Technical Strengths',
+    'candidate.feedback.improvements': 'Areas for Growth',
+    'candidate.feedback.thanks': 'Thank you for interviewing with us. You can now close this window.',
+
+    // Pipeline
+    'pipeline.title': 'Talent Pipeline Intelligence',
+    'pipeline.subtitle': 'Aggregated insights from all candidate evaluations.',
+    'pipeline.total': 'TOTAL CANDIDATES',
+    'pipeline.btn.generate': 'AI Insights',
+    'pipeline.btn.generating': 'Analyzing...',
+    'pipeline.ai.title': 'Executive AI Summary',
+    'pipeline.chart.trend': 'Pipeline Quality Trend',
+    'pipeline.chart.verdict': 'Verdict Distribution',
+    'pipeline.chart.radar': 'Average Competency Radar',
 
     // Pricing
     'pricing.title': 'Choose Your Plan',
@@ -221,8 +258,14 @@ const translations = {
     'interview.reconnect': '检测到网络波动，我们接着刚才关于以下主题的问题继续：',
     'interview.mode.text': '文本',
     'interview.mode.code': '代码',
-    'interview.timer': '用时',
-    'interview.round': '回合',
+    'interview.timer': '已耗时',
+    'interview.round': '当前轮次',
+    'interview.code.clear': '清空',
+    'interview.code.run': '运行',
+    'interview.code.submit': '提交代码',
+    'interview.code.output': '执行输出',
+    'interview.code.compile_error': '编译错误',
+    'interview.code.no_output': '程序已退出，无任何输出。',
 
     'report.title': '技术评估报告',
     'report.overall': '综合评分',
@@ -241,6 +284,27 @@ const translations = {
     'report.verdict.MAYBE': '待定',
     'report.verdict.NO_HIRE': '不推荐',
 
+    // Candidate Welcome
+    'candidate.welcome.title': 'AI 深度技术面考',
+    'candidate.welcome.invited': '您受邀参加以下职位的面试：',
+    'candidate.welcome.email': '您的邮箱',
+    'candidate.welcome.privacy.title': '隐私声明',
+    'candidate.welcome.privacy.desc': '您的个人数据将在评估前进行脱敏处理。AI 引擎会实时分析音频和文本输入，绝不用于其他用途。',
+    'candidate.welcome.connecting': '正在连接神经引擎...',
+    'candidate.welcome.enter': '进入面考实验室',
+    'candidate.welcome.start': '开始面试',
+    'candidate.welcome.verify.title': '身份验证',
+    'candidate.welcome.verify.github': '使用 GitHub 验证',
+    'candidate.welcome.verify.redirecting': '正在跳转...',
+
+    // Candidate Feedback
+    'candidate.feedback.title': '面试评估报告',
+    'candidate.feedback.letter': '来自 CTO 的一封信',
+    'candidate.feedback.strengths': '技术亮点',
+    'candidate.feedback.improvements': '提升空间',
+    'candidate.feedback.thanks': '感谢您参加本次面试，您现在可以关闭此窗口。',
+
+    // Pricing
     'pricing.title': '选择你的计划',
     'pricing.subtitle': '从个人到企业团队',
     'pricing.free.name': '侦察版',
@@ -287,7 +351,7 @@ const translations = {
     'jd.btn.launch': '启动定制化面试',
 
     // Pipeline
-    'pipeline.title': 'Talent Pipeline Intelligence',
+    'pipeline.title': '人才管道智能分析',
     'pipeline.subtitle': '基于所有候选人评估数据的深度聚合洞察。',
     'pipeline.btn.generate': 'AI 深度洞察',
     'pipeline.btn.generating': '分析中...',

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/layout/Header'
 import LandingPage from '@/pages/LandingPage'
@@ -8,6 +8,10 @@ import PipelinePage from '@/pages/PipelinePage'
 import InterviewPage from '@/pages/InterviewPage'
 import ReportPage from '@/pages/ReportPage'
 import PricingPage from '@/pages/PricingPage'
+
+import CandidateWelcomePage from '@/pages/CandidateWelcomePage'
+import CandidateInterviewPage from '@/pages/CandidateInterviewPage'
+import CandidateFeedbackPage from '@/pages/CandidateFeedbackPage'
 
 // Protected route wrapper
 function ProtectedRoute({ children }) {
@@ -31,28 +35,34 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-// Public-only route (redirect to dashboard if logged in)
-function PublicOnlyRoute({ children }) {
-  const { user, isLoading } = useAuth()
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <i className="fa-solid fa-circle-notch fa-spin text-3xl text-primary" />
-        </div>
-      </div>
-    )
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return children
-}
 
 import ParticleBackground from '@/components/effects/ParticleBackground'
+import { useI18n } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
+
+function GlobalBackButton() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { lang } = useI18n()
+
+  // Do not show on Landing Page or Interview Room where user is trapped
+  if (location.pathname === '/' || location.pathname.startsWith('/interview/') || location.pathname.startsWith('/c-interview/')) {
+    return null
+  }
+
+  return (
+    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-2 z-20 relative">
+      <Button 
+        variant="ghost" 
+        onClick={() => navigate(-1)}
+        className="text-muted-foreground hover:text-foreground pl-0 group h-8 ml-[42px]"
+      >
+        <i className="fa-solid fa-arrow-left mr-2 transition-transform group-hover:-translate-x-1" />
+        {lang === 'cn' ? '返回上一页' : 'Go Back'}
+      </Button>
+    </div>
+  )
+}
 
 // Root layout with header
 function RootLayout() {
@@ -65,6 +75,7 @@ function RootLayout() {
       
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
+        <GlobalBackButton />
         <div className="flex-1">
           <Outlet />
         </div>
@@ -80,11 +91,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <PublicOnlyRoute>
-            <LandingPage />
-          </PublicOnlyRoute>
-        ),
+        element: <LandingPage />,
       },
       {
         path: 'dashboard',
@@ -129,6 +136,18 @@ export const router = createBrowserRouter([
       {
         path: 'pricing',
         element: <PricingPage />,
+      },
+      {
+        path: 'invite',
+        element: <CandidateWelcomePage />,
+      },
+      {
+        path: 'c-interview/:sessionId',
+        element: <CandidateInterviewPage />,
+      },
+      {
+        path: 'candidate-feedback/:reportId',
+        element: <CandidateFeedbackPage />,
       },
       {
         path: '*',

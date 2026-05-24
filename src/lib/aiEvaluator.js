@@ -2,9 +2,11 @@
  * After an interview ends, send the full conversation history to Gemini
  * and request a structured JSON evaluation.
  */
+import { redactPII } from './piiRedactor'
 export async function generateEvaluation(messages, resumeContext = '', lang = 'en', antiCheatSummary = null, customConfig = null) {
+  const redactedResume = redactPII(resumeContext);
   const chatHistory = messages.map((m, i) => 
-    `[${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}] (Round ${Math.ceil((i+1)/2)}): ${m.text}`
+    `[${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}] (Round ${Math.ceil((i+1)/2)}): ${redactPII(m.text)}`
   ).join('\n\n')
 
   const langName = lang === 'en' ? 'English' : 'Simplified Chinese (简体中文)'
@@ -12,7 +14,7 @@ export async function generateEvaluation(messages, resumeContext = '', lang = 'e
   const prompt = `You are a senior technical hiring committee member reviewing an AI-conducted technical interview. 
 Analyze the following interview transcript and produce a STRICT JSON evaluation.
 
-${resumeContext ? `[CANDIDATE PROFILE]: ${resumeContext}` : ''}
+${redactedResume ? `[CANDIDATE PROFILE]: ${redactedResume}` : ''}
 ${customConfig ? `[CUSTOM EVALUATION PLAN]:\nThe candidate was interviewed for: ${customConfig.jobTitle}\nPlease use the following weights to calculate the overallScore:\n${JSON.stringify(customConfig.weights, null, 2)}` : ''}
 
 [INTERVIEW TRANSCRIPT]:
@@ -131,25 +133,29 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
 /**
  * Build the interview system prompt for the AI interviewer
  */
-export function buildInterviewPrompt(userMessage, resumeContext, chatHistory = [], lang = 'en', customConfig = null) {
+export function buildInterviewPrompt(latestInput, resumeContext = '', conversationHistory = [], lang = 'en', customConfig = null) {
   const langName = lang === 'en' ? 'English' : 'Simplified Chinese (简体中文)'
-  const historyText = chatHistory.map(m => 
-    `${m.role === 'user' ? 'Candidate' : 'Interviewer'}: ${m.text}`
-  ).join('\n')
+  const redactedResume = redactPII(resumeContext)
+  
+  // Convert our simplified history into the prompt
+  const historyText = conversationHistory.map(m => {
+    return `${m.role === 'user' ? 'Candidate' : 'Interviewer'}: ${redactPII(m.text)}`
+  }).join('\n')
 
-  return `You are a professional, gentle, and highly patient Senior Technical Interviewer at a top-tier cybersecurity firm. You are conducting a technical assessment.
+  let basePrompt = `You are an expert technical interviewer (CTO level) conducting a conversational technical interview.
+You are strict but fair, aiming to deeply evaluate the candidate's engineering skills.
 
-${resumeContext ? `[CANDIDATE CONTEXT]: The candidate claims this profile: "${resumeContext}".` : 'No candidate profile provided.'}
+${redactedResume ? `Here is the candidate's background/resume:\n"""\n${redactedResume}\n"""\n` : 'No candidate profile provided.'}
 
 [CONVERSATION HISTORY]:
 ${historyText || '(Interview just started)'}
 
 [CANDIDATE'S LATEST RESPONSE]:
-"${userMessage}"
+"${latestInput}"
 
 [YOUR INSTRUCTIONS (STRICT)]:
-${customConfig ? `[CUSTOM INTERVIEW PLAN]:
-You are interviewing for the role of: ${customConfig.jobTitle}
+${customConfig?.questions ? `[CUSTOM INTERVIEW PLAN]:
+You are interviewing for the role of: ${customConfig.jobTitle || 'Software Engineer'}
 Here is the list of customized questions you MUST ask the candidate, in order:
 ${customConfig.questions.map((q, i) => `${i + 1}. [${q.type}] ${q.question}`).join('\n')}
 
@@ -166,4 +172,5 @@ INSTRUCTIONS:
 5. Provide code blocks using markdown (specify the language).
 6. CRITICAL: You MUST respond entirely in ${langName}. Do NOT use any other language.`}
 `
+  return basePrompt
 }

@@ -148,6 +148,19 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
   }))
 
   // 2. Radar Data (Average Dimensions)
+  const getDimensionLabel = (name) => {
+    const map = {
+      'Architecture Design': t('dim.ad') || 'Architecture Design',
+      'Core Fundamentals': t('dim.cf') || 'Core Fundamentals',
+      'Security Awareness': t('dim.sa') || 'Security Awareness',
+      'Code Quality': t('dim.cq') || 'Code Quality',
+      'Problem Solving': t('dim.ps') || 'Problem Solving',
+      'Communication': t('dim.c') || 'Communication',
+      'Culture Fit': t('dim.cult') || 'Culture Fit',
+    }
+    return map[name] || name
+  }
+
   let dimSums = {}
   reports.forEach(r => {
     r.evaluation?.dimensions?.forEach(d => {
@@ -155,7 +168,7 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
     })
   })
   const radarData = Object.entries(dimSums).map(([name, sum]) => ({
-    subject: name,
+    subject: getDimensionLabel(name),
     A: Math.round(sum / reports.length),
     fullMark: 100
   }))
@@ -167,12 +180,13 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
     return acc
   }, {})
   const barData = Object.entries(verdicts).map(([name, count]) => ({
-    name,
+    displayName: t(`report.verdict.${name}`) || name,
+    originalName: name,
     count
   }))
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen pb-12 px-4 max-w-7xl mx-auto space-y-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
         <div>
@@ -277,7 +291,7 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} />
+                <XAxis dataKey="displayName" stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} />
                 <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} axisLine={false} />
                 <RechartsTooltip 
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
@@ -285,7 +299,7 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {barData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={VERDICT_COLORS[entry.name] || '#3b82f6'} />
+                    <Cell key={`cell-${index}`} fill={VERDICT_COLORS[entry.originalName] || '#3b82f6'} />
                   ))}
                 </Bar>
               </BarChart>

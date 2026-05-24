@@ -7,6 +7,7 @@ import { useInterview } from '@/contexts/InterviewContext'
 import { useI18n } from '@/lib/i18n'
 import { buildInterviewPrompt } from '@/lib/aiEvaluator'
 import { AntiCheatMonitor } from '@/lib/antiCheat'
+import { VoiceEngine } from '@/lib/voiceEngine'
 import ChatMessage from './ChatMessage'
 import CodeEditor from './CodeEditor'
 import CyberLoadingScreen from '../effects/CyberLoadingScreen'
@@ -48,11 +49,36 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', c
   const [integrityScore, setIntegrityScore] = useState(100)
   const [showResumePrompt, setShowResumePrompt] = useState(false)
   const [visualMetrics, setVisualMetrics] = useState(null)
+  
+  // Voice states
+  const [voiceStatus, setVoiceStatus] = useState('idle')
+  const [voiceTranscript, setVoiceTranscript] = useState('')
+  const voiceEngineRef = useRef(null)
 
   const messagesEndRef = useRef(null)
   const antiCheatRef = useRef(null)
   const chatContainerRef = useRef(null)
   const inputRef = useRef(null)
+
+  // --- Initialize Voice Engine ---
+  useEffect(() => {
+    const engine = new VoiceEngine(
+      (result) => {
+        if (result.interim) {
+          setVoiceTranscript(result.interim)
+        }
+        if (result.final) {
+          setInputText((prev) => (prev + ' ' + result.final).trim())
+          setVoiceTranscript('')
+        }
+      },
+      (status) => setVoiceStatus(status)
+    )
+    engine.setLanguage(lang)
+    voiceEngineRef.current = engine
+
+    return () => engine.stopSpeaking()
+  }, [lang])
 
   // --- Auto-scroll to bottom ---
   const scrollToBottom = useCallback(() => {
@@ -163,6 +189,12 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', c
       }
 
       addMessage('ai', data.text)
+      
+      // Auto-speak the AI's response
+      if (voiceEngineRef.current) {
+        voiceEngineRef.current.speak(data.text, lang)
+      }
+      
     } catch (error) {
       console.error('AI response error:', error)
       const errorMsg = error.message?.includes('API key configuration error')
@@ -171,14 +203,21 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', c
       addMessage('ai', errorMsg)
     } finally {
       setIsLoading(false)
-      // Refocus input
-      setTimeout(() => inputRef.current?.focus(), 100)
+      // Refocus input if text mode
+      if (inputMode === 'text') {
+        setTimeout(() => inputRef.current?.focus(), 100)
+      }
     }
-  }, [inputText, isLoading, messages, resumeContext, config, addMessage, t])
+  }, [inputText, isLoading, messages, resumeContext, config, addMessage, t, lang, inputMode])
 
   // --- Handle code submission ---
-  const handleCodeSubmit = useCallback((code, language) => {
-    const formattedMessage = `Here is my code solution in **${language}**:\n\n\`\`\`${language}\n${code}\n\`\`\``
+  const handleCodeSubmit = useCallback((code, language, outputString) => {
+    let formattedMessage = `Here is my code solution in **${language}**:\n\n\`\`\`${language}\n${code}\n\`\`\``
+    
+    if (outputString) {
+      formattedMessage += `\n\n**Execution Output (Console/Terminal):**\n\`\`\`\n${outputString}\n\`\`\``
+    }
+    
     handleSend(formattedMessage)
     setInputMode('text') // Switch back to text after code submit
   }, [handleSend])
@@ -268,14 +307,14 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', c
   }
 
   return (
-    <div className="w-full h-[calc(100vh-8rem)] max-w-6xl mx-auto flex items-center justify-center px-4">
+    <div className="w-full flex-1 max-w-6xl mx-auto flex flex-col px-4 min-h-[750px]">
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full h-full"
+        className="w-full flex-1 flex flex-col"
       >
-        <Card className="w-full h-full flex flex-col shadow-2xl shadow-primary/5 border border-white/5 overflow-hidden backdrop-blur-xl bg-card/80 rounded-2xl relative">
+        <Card className="w-full flex-1 flex flex-col shadow-2xl shadow-primary/5 border border-white/5 overflow-hidden backdrop-blur-xl bg-card/80 rounded-2xl relative">
           
           {/* Visual Monitor (Floating Top Right of Screen) */}
           {isActive && (
@@ -329,7 +368,7 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', c
           {/* ═══ Chat area ═══ */}
           <CardContent
             ref={chatContainerRef}
-            className="flex-1 overflow-y-auto p-6 space-y-5 bg-background/20 scrollbar-thin"
+            className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 bg-background/20 scrollbar-thin"
           >
             <AnimatePresence mode="popLayout">
               {messages.map((msg, index) => (
@@ -391,17 +430,42 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', c
                   className="px-6 pb-4 pt-2"
                 >
                   <div className="max-w-4xl mx-auto flex gap-3">
-                    <Input
-                      ref={inputRef}
-                      id="interview-text-input"
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={t('interview.placeholder')}
-                      className="flex-1 py-6 px-4 text-base rounded-xl bg-background border-white/10 focus:border-primary/50 placeholder:text-muted-foreground/50"
+                    <div className="flex-1 relative">
+                      <Input
+                        ref={inputRef}
+                        id="interview-text-input"
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={voiceStatus === 'listening' ? "Listening..." : t('interview.placeholder')}
+                        className={`w-full py-6 px-4 text-base rounded-xl bg-background border-white/10 focus:border-primary/50 placeholder:text-muted-foreground/50 ${voiceStatus === 'listening' ? 'pl-12 border-primary ring-1 ring-primary shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                      {voiceStatus === 'listening' && (
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping delay-75" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping delay-150" />
+                        </div>
+                      )}
+                      {voiceTranscript && voiceStatus === 'listening' && (
+                        <div className="absolute -top-8 left-0 text-xs text-primary bg-primary/10 px-2 py-1 rounded">
+                          {voiceTranscript}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Button
+                      id="voice-toggle-btn"
+                      variant="outline"
+                      size="lg"
+                      className={`rounded-xl px-4 transition-all ${voiceStatus === 'listening' ? 'bg-red-500/20 text-red-400 border-red-500/50 hover:bg-red-500/30' : 'bg-background hover:bg-card border-white/10'}`}
+                      onClick={() => voiceEngineRef.current?.toggleListening()}
                       disabled={isLoading}
-                      autoFocus
-                    />
+                    >
+                      <i className={`fa-solid fa-microphone ${voiceStatus === 'listening' ? 'animate-pulse' : ''}`} />
+                    </Button>
                     <Button
                       id="interview-send-btn"
                       onClick={() => handleSend()}

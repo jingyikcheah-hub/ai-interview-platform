@@ -72,21 +72,12 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 pt-20 pb-12">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 pb-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/dashboard')}
-          className="mb-6 text-muted-foreground hover:text-foreground"
-        >
-          <i className="fa-solid fa-arrow-left mr-2" />
-          {t('nav.back')}
-        </Button>
 
         {report && <ReportCard report={report} />}
       </motion.div>

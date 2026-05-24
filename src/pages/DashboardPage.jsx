@@ -96,11 +96,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchEvents()
-    if (user) fetchReports()
+    if (user) {
+      const pendingInvite = localStorage.getItem('pendingInvite')
+      if (pendingInvite) {
+        try {
+          const { data, timestamp } = JSON.parse(pendingInvite)
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            localStorage.removeItem('pendingInvite')
+            navigate(`/invite?data=${data}&autoStart=true`)
+            return
+          }
+        } catch (e) {}
+        localStorage.removeItem('pendingInvite')
+      }
+      
+      fetchReports()
+    }
     // Check for recoverable session
     const activeId = getActiveSessionId()
     if (activeId) setRecoverySessionId(activeId)
-  }, [user])
+  }, [user, navigate])
 
   const fetchEvents = async () => {
     const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false })
@@ -184,6 +199,17 @@ export default function DashboardPage() {
     navigate(`/interview/${sessionId}`)
   }
 
+  const handleGenerateInvite = () => {
+    const configData = {
+      jobTitle: 'Software Engineer',
+      resumeContext: resumeContext || ''
+    }
+    const b64 = btoa(JSON.stringify(configData))
+    const link = `${window.location.origin}/invite?data=${b64}`
+    navigator.clipboard.writeText(link)
+    alert(lang === 'cn' ? '面试邀请链接已复制到剪贴板！发送给候选人即可开始。' : 'Invite link copied to clipboard! Send to candidate to begin.')
+  }
+
   const handleResumeSession = () => {
     if (recoverySessionId) {
       const success = resumeInterview(recoverySessionId)
@@ -210,7 +236,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pt-20 pb-12">
+    <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pb-12">
       {/* Session Recovery Banner */}
       {recoverySessionId && (
         <motion.div
@@ -246,14 +272,25 @@ export default function DashboardPage() {
           {/* Resume Uploader */}
           <motion.div variants={fadeUp}>
             <ResumeUploader onContextReady={handleContextReady} />
-            <Button
-              id="btn-launch-interview"
-              onClick={handleLaunchInterview}
-              className="w-full md:w-auto mt-4 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 px-8 py-5 text-base"
-            >
-              <i className="fa-solid fa-bolt mr-2" />
-              {t('dash.launch')}
-            </Button>
+            <div className="flex flex-wrap gap-4 mt-4">
+              <Button
+                id="btn-launch-interview"
+                onClick={handleLaunchInterview}
+                className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 px-8 py-5 text-base"
+              >
+                <i className="fa-solid fa-bolt mr-2" />
+                {t('dash.launch')}
+              </Button>
+              <Button
+                id="btn-generate-invite"
+                onClick={handleGenerateInvite}
+                variant="outline"
+                className="border-primary/50 text-primary hover:bg-primary/10 px-8 py-5 text-base"
+              >
+                <i className="fa-solid fa-link mr-2" />
+                {lang === 'cn' ? '生成候选人邀请链接' : 'Generate Invite Link'}
+              </Button>
+            </div>
           </motion.div>
 
           {/* Events Board */}
@@ -312,6 +349,20 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                    <div className="mt-4 pt-4 border-t border-white/10 flex justify-end">
+                      <Button variant="outline" size="sm" className="bg-primary/20 text-primary border-primary/30" onClick={() => {
+                        const configData = {
+                          jobTitle: event.title,
+                          resumeContext: event.description
+                        }
+                        const b64 = btoa(JSON.stringify(configData))
+                        const link = `${window.location.origin}/invite?data=${b64}`
+                        navigator.clipboard.writeText(link)
+                        alert(lang === 'cn' ? '职位专属面试邀请链接已复制！' : 'Event invite link copied!')
+                      }}>
+                        <i className="fa-solid fa-link mr-1" /> {lang === 'cn' ? '邀请候选人' : 'Invite'}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

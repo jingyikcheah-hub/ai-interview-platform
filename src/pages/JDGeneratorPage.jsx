@@ -104,7 +104,7 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 max-w-6xl mx-auto flex flex-col gap-8">
+    <div className="min-h-screen pb-12 px-4 max-w-6xl mx-auto flex flex-col gap-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -251,13 +251,31 @@ RESPOND ONLY WITH VALID JSON using this exact schema (translate text values to $
                 </div>
 
                 {/* Launch Action */}
-                <div className="pt-6 mt-4 border-t border-white/10 shrink-0">
+                <div className="pt-6 mt-4 border-t border-white/10 shrink-0 flex gap-3">
                   <Button
                     onClick={handleLaunch}
-                    className="w-full h-14 text-lg font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
+                    className="flex-1 h-14 text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
                   >
                     <i className="fa-solid fa-rocket mr-2" />
                     {t('jd.btn.launch') || 'Launch Tailored Interview'}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const configData = {
+                        jobTitle: result.jobTitle,
+                        resumeContext: jdText,
+                        customConfig: result
+                      }
+                      const b64 = btoa(JSON.stringify(configData))
+                      const link = `${window.location.origin}/invite?data=${b64}`
+                      navigator.clipboard.writeText(link)
+                      alert(lang === 'cn' ? '基于此 JD 的专属邀请链接已复制到剪贴板！' : 'Custom JD invite link copied to clipboard!')
+                    }}
+                    variant="outline"
+                    className="h-14 px-6 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                  >
+                    <i className="fa-solid fa-link mr-2" />
+                    {lang === 'cn' ? '复制邀请链接' : 'Copy Invite Link'}
                   </Button>
                 </div>
               </motion.div>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import Editor from '@monaco-editor/react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/lib/i18n'
+import { executeCode } from '@/lib/pistonApi'
 
 const LANGUAGES = [
   { id: 'javascript', label: 'JavaScript' },
@@ -29,12 +30,16 @@ const DEFAULT_TEMPLATES = {
 /**
  * CodeEditor — Monaco Editor wrapper for code interviews.
  *
- * @param {{ onSubmit: (code: string, language: string) => void, disabled: boolean }} props
+ * @param {{ onSubmit: (code: string, language: string, output: string) => void, disabled: boolean }} props
  */
 export default function CodeEditor({ onSubmit, disabled = false }) {
   const { t } = useI18n()
   const [language, setLanguage] = useState('javascript')
   const [code, setCode] = useState(DEFAULT_TEMPLATES.javascript)
+  
+  // Execution states
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [executionOutput, setExecutionOutput] = useState(null)
 
   const handleLanguageChange = useCallback((langId) => {
     setLanguage(langId)
@@ -43,14 +48,34 @@ export default function CodeEditor({ onSubmit, disabled = false }) {
 
   const handleClear = useCallback(() => {
     setCode(DEFAULT_TEMPLATES[language] || '')
+    setExecutionOutput(null)
   }, [language])
+
+  const handleRun = useCallback(async () => {
+    if (!code.trim() || disabled) return
+    setIsExecuting(true)
+    setExecutionOutput(null)
+    
+    try {
+      const result = await executeCode(language, code)
+      setExecutionOutput(result)
+    } catch (err) {
+      setExecutionOutput({ run: { output: '', stderr: err.message }})
+    } finally {
+      setIsExecuting(false)
+    }
+  }, [code, language, disabled])
 
   const handleSubmit = useCallback(() => {
     if (!code.trim() || disabled) return
-    onSubmit(code, language)
+    // Pass output back to the parent to append to the AI prompt
+    const outputString = executionOutput?.run?.output || ''
+    onSubmit(code, language, outputString)
+    
     // Reset after submit
     setCode(DEFAULT_TEMPLATES[language] || '')
-  }, [code, language, disabled, onSubmit])
+    setExecutionOutput(null)
+  }, [code, language, disabled, executionOutput, onSubmit])
 
   return (
     <motion.div
@@ -76,7 +101,7 @@ export default function CodeEditor({ onSubmit, disabled = false }) {
           className="text-muted-foreground hover:text-foreground text-xs"
         >
           <i className="fa-solid fa-eraser mr-1" />
-          Clear
+          {t('interview.code.clear')}
         </Button>
       </div>
 
@@ -99,9 +124,9 @@ export default function CodeEditor({ onSubmit, disabled = false }) {
       </div>
 
       {/* Monaco Editor */}
-      <div className="min-h-[300px]">
+      <div className="min-h-[200px]">
         <Editor
-          height="300px"
+          height="200px"
           language={language === 'cpp' ? 'cpp' : language}
           value={code}
           onChange={(value) => setCode(value || '')}
@@ -122,7 +147,7 @@ export default function CodeEditor({ onSubmit, disabled = false }) {
             bracketPairColorization: { enabled: true },
           }}
           loading={
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm font-mono">
+            <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm font-mono">
               <i className="fa-solid fa-spinner fa-spin mr-2" />
               {t('common.loading')}
             </div>
@@ -135,16 +160,60 @@ export default function CodeEditor({ onSubmit, disabled = false }) {
         <span className="text-[11px] text-muted-foreground/60 font-mono">
           {code.split('\n').length} lines
         </span>
-        <Button
-          id="code-submit-btn"
-          onClick={handleSubmit}
-          disabled={disabled || !code.trim()}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
-        >
-          <i className="fa-solid fa-terminal mr-2" />
-          Submit Code
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            id="code-run-btn"
+            onClick={handleRun}
+            disabled={disabled || !code.trim() || isExecuting}
+            variant="outline"
+            className="border-primary/50 text-primary hover:bg-primary/10"
+          >
+            {isExecuting ? (
+              <i className="fa-solid fa-spinner fa-spin mr-2" />
+            ) : (
+              <i className="fa-solid fa-play mr-2" />
+            )}
+            {t('interview.code.run')}
+          </Button>
+          <Button
+            id="code-submit-btn"
+            onClick={handleSubmit}
+            disabled={disabled || !code.trim()}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+          >
+            <i className="fa-solid fa-terminal mr-2" />
+            {t('interview.code.submit')}
+          </Button>
+        </div>
       </div>
+
+      {/* Output Terminal Pane */}
+      {executionOutput && (
+        <div className="bg-[#0f111a] border-t border-white/10 p-4 max-h-[200px] overflow-y-auto font-mono text-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-muted-foreground uppercase tracking-wider text-[10px] font-bold">{t('interview.code.output')}</span>
+            {executionOutput.compile && executionOutput.compile.code !== 0 && (
+              <span className="text-red-400 bg-red-400/10 px-2 py-0.5 rounded text-[10px]">{t('interview.code.compile_error')}</span>
+            )}
+          </div>
+          
+          {executionOutput.compile?.stderr && (
+            <pre className="text-red-400 whitespace-pre-wrap mb-2">{executionOutput.compile.stderr}</pre>
+          )}
+          
+          {executionOutput.run?.stderr && (
+            <pre className="text-red-400 whitespace-pre-wrap mb-2">{executionOutput.run.stderr}</pre>
+          )}
+          
+          {executionOutput.run?.stdout && (
+            <pre className="text-emerald-400 whitespace-pre-wrap">{executionOutput.run.stdout}</pre>
+          )}
+
+          {!executionOutput.compile?.stderr && !executionOutput.run?.stderr && !executionOutput.run?.stdout && (
+            <span className="text-muted-foreground italic">{t('interview.code.no_output')}</span>
+          )}
+        </div>
+      )}
     </motion.div>
   )
 }

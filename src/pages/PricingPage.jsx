@@ -62,7 +62,7 @@ export default function PricingPage() {
   const [isWarningOpen, setIsWarningOpen] = useState(false)
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pb-16">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <motion.div

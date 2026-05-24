@@ -18,7 +18,7 @@ const fadeUp = {
 }
 
 export default function LandingPage() {
-  const { loginWithGithub, loginAsGuest } = useAuth()
+  const { user, loginWithGithub, loginAsGuest } = useAuth()
   const { t, lang } = useI18n()
   const navigate = useNavigate()
   const [statCounts, setStatCounts] = useState({ interviews: 0, engineers: 0, accuracy: 0 })
@@ -154,10 +154,10 @@ export default function LandingPage() {
             <Button 
               size="lg" 
               className="px-8 py-6 text-base bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 neon-border"
-              onClick={() => document.getElementById('auth-section')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => user ? navigate('/dashboard') : document.getElementById('auth-section')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <i className="fa-solid fa-bolt mr-2" />
-              {t('landing.hero.cta')}
+              <i className={user ? "fa-solid fa-arrow-right mr-2" : "fa-solid fa-bolt mr-2"} />
+              {user ? (lang === 'cn' ? '进入控制面板' : 'Go to Dashboard') : t('landing.hero.cta')}
             </Button>
             <Button 
               variant="outline" 
@@ -271,29 +271,44 @@ export default function LandingPage() {
                 <CardDescription>{t('landing.auth.subtitle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button 
-                  id="btn-guest-login"
-                  className="w-full bg-primary/20 hover:bg-primary/40 text-primary border border-primary/50 py-6 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]" 
-                  onClick={loginAsGuest}
-                >
-                  <i className="fa-solid fa-user-secret text-xl mr-3" />
-                  {lang === 'cn' ? '访客免密体验' : 'Guest Access'}
-                </Button>
-                <div className="flex items-center gap-2 py-2">
-                  <div className="h-px flex-1 bg-white/10" />
-                  <span className="text-xs text-muted-foreground">or connect with</span>
-                  <div className="h-px flex-1 bg-white/10" />
-                </div>
-                <div className="grid grid-cols-1 gap-3">
+                {user ? (
                   <Button 
-                    id="btn-github-login"
-                    className="w-full bg-[#24292F] hover:bg-[#24292F]/80 text-white py-5 transition-all" 
-                    onClick={loginWithGithub}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 transition-all shadow-lg shadow-primary/25 neon-border text-lg" 
+                    onClick={() => navigate('/dashboard')}
                   >
-                    <i className="fa-brands fa-github text-lg mr-2" />
-                    GitHub
+                    <i className="fa-solid fa-gauge-high mr-3" />
+                    {lang === 'cn' ? '进入控制面板' : 'Enter Dashboard'}
                   </Button>
-                </div>
+                ) : (
+                  <>
+                    <Button 
+                      id="btn-guest-login"
+                      className="w-full bg-primary/20 hover:bg-primary/40 text-primary border border-primary/50 py-6 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]" 
+                      onClick={async () => {
+                        await loginAsGuest()
+                        navigate('/dashboard')
+                      }}
+                    >
+                      <i className="fa-solid fa-user-secret text-xl mr-3" />
+                      {lang === 'cn' ? '访客免密体验' : 'Guest Access'}
+                    </Button>
+                    <div className="flex items-center gap-2 py-2">
+                      <div className="h-px flex-1 bg-white/10" />
+                      <span className="text-xs text-muted-foreground">or connect with</span>
+                      <div className="h-px flex-1 bg-white/10" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      <Button 
+                        id="btn-github-login"
+                        className="w-full bg-[#24292F] hover:bg-[#24292F]/80 text-white py-5 transition-all" 
+                        onClick={() => loginWithGithub(`${window.location.origin}/dashboard`)}
+                      >
+                        <i className="fa-brands fa-github text-lg mr-2" />
+                        GitHub
+                      </Button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>
