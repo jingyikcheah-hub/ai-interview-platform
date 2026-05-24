@@ -125,6 +125,8 @@ function ReportCard({ report }) {
     feedbackLetter = '',
   } = evaluation
 
+  const isValidFeedback = feedbackLetter && typeof feedbackLetter === 'string' && !feedbackLetter.toLowerCase().includes('system error')
+
   const {
     integrityScore = 0,
     tabSwitches = 0,
@@ -312,7 +314,7 @@ function ReportCard({ report }) {
       </motion.div>
 
       {/* ====== 6.5 Personalized Feedback Letter ====== */}
-      {feedbackLetter && (
+      {isValidFeedback && (
         <motion.div variants={item}>
           <Card className="border-primary/20 bg-primary/5 backdrop-blur-xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary/50" />
