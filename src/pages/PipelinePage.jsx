@@ -32,7 +32,11 @@ export default function PipelinePage() {
         .order('created_at', { ascending: true })
 
       if (!error && data) {
-        setReports(data)
+        const validReports = data.filter(r => {
+          const letter = r.evaluation?.feedbackLetter || ''
+          return !letter.toLowerCase().includes('system error')
+        })
+        setReports(validReports)
       }
       setLoading(false)
     }
@@ -45,7 +49,10 @@ export default function PipelinePage() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'interview_reports' },
         (payload) => {
-          setReports(current => [...current, payload.new])
+          const letter = payload.new.evaluation?.feedbackLetter || ''
+          if (!letter.toLowerCase().includes('system error')) {
+            setReports(current => [...current, payload.new])
+          }
         }
       )
       .subscribe()

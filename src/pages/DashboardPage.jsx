@@ -129,7 +129,13 @@ export default function DashboardPage() {
       .select('*')
       .eq('candidate_email', user.email)
       .order('created_at', { ascending: false })
-    if (!error) setReports(data || [])
+    if (!error && data) {
+      const valid = data.filter(r => {
+        const letter = r.evaluation?.feedbackLetter || ''
+        return !letter.toLowerCase().includes('system error')
+      })
+      setReports(valid)
+    }
   }
 
   const handleSaveEvent = async (e) => {
