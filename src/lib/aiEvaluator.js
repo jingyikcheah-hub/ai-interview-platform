@@ -2,7 +2,7 @@
  * After an interview ends, send the full conversation history to Gemini
  * and request a structured JSON evaluation.
  */
-export async function generateEvaluation(messages, resumeContext = '', lang = 'en', antiCheatSummary = null) {
+export async function generateEvaluation(messages, resumeContext = '', lang = 'en', antiCheatSummary = null, customConfig = null) {
   const chatHistory = messages.map((m, i) => 
     `[${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}] (Round ${Math.ceil((i+1)/2)}): ${m.text}`
   ).join('\n\n')
@@ -13,6 +13,7 @@ export async function generateEvaluation(messages, resumeContext = '', lang = 'e
 Analyze the following interview transcript and produce a STRICT JSON evaluation.
 
 ${resumeContext ? `[CANDIDATE PROFILE]: ${resumeContext}` : ''}
+${customConfig ? `[CUSTOM EVALUATION PLAN]:\nThe candidate was interviewed for: ${customConfig.jobTitle}\nPlease use the following weights to calculate the overallScore:\n${JSON.stringify(customConfig.weights, null, 2)}` : ''}
 
 [INTERVIEW TRANSCRIPT]:
 ${chatHistory}
@@ -35,7 +36,7 @@ If the interview is extremely short (e.g. candidate only said "hello"), score th
 7. Culture Fit - resilience under pressure, openness to feedback, geek passion, emotional stability (Note: Refer to the [VISUAL MONITORING REPORT] if available to justify their focus, stress, or emotional state during the interview).
 
 Then provide:
-- An overall score (weighted average, security and fundamentals weighted higher)
+- An overall score (weighted average using the custom weights if provided, otherwise security and fundamentals weighted higher)
 - A one-paragraph executive summary
 - 3 key strengths (brief, specific)
 - 3 areas for improvement (brief, specific)
@@ -73,7 +74,18 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
       body: JSON.stringify({ prompt }),
     })
 
-    const data = await response.json()
+    const textResponse = await response.text()
+    if (!textResponse) {
+      throw new Error(`Empty response from server (Status: ${response.status})`)
+    }
+
+    let data;
+    try {
+      data = JSON.parse(textResponse)
+    } catch (err) {
+      console.error("Failed to parse JSON. Raw response:", textResponse)
+      throw new Error(`Failed to parse server response. Status: ${response.status}`)
+    }
 
     if (!response.ok) {
       throw new Error(data.error || 'Failed to fetch from backend API')
@@ -119,7 +131,7 @@ RESPOND WITH ONLY VALID JSON, no markdown fences, no explanation. Use this exact
 /**
  * Build the interview system prompt for the AI interviewer
  */
-export function buildInterviewPrompt(userMessage, resumeContext, chatHistory = [], lang = 'en') {
+export function buildInterviewPrompt(userMessage, resumeContext, chatHistory = [], lang = 'en', customConfig = null) {
   const langName = lang === 'en' ? 'English' : 'Simplified Chinese (简体中文)'
   const historyText = chatHistory.map(m => 
     `${m.role === 'user' ? 'Candidate' : 'Interviewer'}: ${m.text}`
@@ -136,10 +148,22 @@ ${historyText || '(Interview just started)'}
 "${userMessage}"
 
 [YOUR INSTRUCTIONS (STRICT)]:
-1. If this is the start of the interview, politely provide a realistic, vulnerable code snippet or architecture description (e.g. smart contract reentrancy, SSRF, broken auth) related to their stack.
+${customConfig ? `[CUSTOM INTERVIEW PLAN]:
+You are interviewing for the role of: ${customConfig.jobTitle}
+Here is the list of customized questions you MUST ask the candidate, in order:
+${customConfig.questions.map((q, i) => `${i + 1}. [${q.type}] ${q.question}`).join('\n')}
+
+INSTRUCTIONS:
+1. You must go through these customized questions one by one.
+2. Ask the first question. Wait for the candidate's answer.
+3. Then, ask a follow-up if necessary to dig deeper, or move to the next question.
+4. CRITICAL TONE REQUIREMENT: Maintain absolute professionalism, patience, and a mild, gentle tone at all times.
+5. Provide code blocks using markdown (specify the language).
+6. CRITICAL: You MUST respond entirely in ${langName}. Do NOT use any other language.` : `1. If this is the start of the interview, politely provide a realistic, vulnerable code snippet or architecture description (e.g. smart contract reentrancy, SSRF, broken auth) related to their stack.
 2. Ask the candidate to find the vulnerability and suggest a patch.
 3. Be encouraging and gentle. If they provide a surface-level fix, politely guide them to think deeper or gently point out the remaining flaw.
 4. CRITICAL TONE REQUIREMENT: Maintain absolute professionalism, patience, and a mild, gentle tone at all times. Even if the candidate uses profanity, insults you, or acts unprofessionally, you MUST remain polite, de-escalate the situation, and gently steer the conversation back to the technical assessment. Never show anger or frustration.
 5. Provide code blocks using markdown (specify the language).
-6. CRITICAL: You MUST respond entirely in ${langName}. Do NOT use any other language.`
+6. CRITICAL: You MUST respond entirely in ${langName}. Do NOT use any other language.`}
+`
 }

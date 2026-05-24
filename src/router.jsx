@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/layout/Header'
 import LandingPage from '@/pages/LandingPage'
 import DashboardPage from '@/pages/DashboardPage'
+import JDGeneratorPage from '@/pages/JDGeneratorPage'
+import PipelinePage from '@/pages/PipelinePage'
 import InterviewPage from '@/pages/InterviewPage'
 import ReportPage from '@/pages/ReportPage'
 import PricingPage from '@/pages/PricingPage'
@@ -89,6 +91,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'generate',
+        element: (
+          <ProtectedRoute>
+            <JDGeneratorPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'pipeline',
+        element: (
+          <ProtectedRoute>
+            <PipelinePage />
           </ProtectedRoute>
         ),
       },

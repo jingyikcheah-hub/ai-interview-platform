@@ -17,7 +17,7 @@ const fadeUp = {
 }
 
 export default function LandingPage() {
-  const { loginWithGithub, loginWithLinkedIn, loginAsGuest } = useAuth()
+  const { loginWithGithub, loginAsGuest } = useAuth()
   const { t, lang } = useI18n()
   const navigate = useNavigate()
   const [statCounts, setStatCounts] = useState({ interviews: 0, engineers: 0, accuracy: 0 })
@@ -236,7 +236,7 @@ export default function LandingPage() {
                   <span className="text-xs text-muted-foreground">or connect with</span>
                   <div className="h-px flex-1 bg-white/10" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <Button 
                     id="btn-github-login"
                     className="w-full bg-[#24292F] hover:bg-[#24292F]/80 text-white py-5 transition-all" 
@@ -244,14 +244,6 @@ export default function LandingPage() {
                   >
                     <i className="fa-brands fa-github text-lg mr-2" />
                     GitHub
-                  </Button>
-                  <Button 
-                    id="btn-linkedin-login"
-                    className="w-full bg-[#0A66C2] hover:bg-[#0A66C2]/80 text-white py-5 transition-all" 
-                    onClick={loginWithLinkedIn}
-                  >
-                    <i className="fa-brands fa-linkedin text-lg mr-2" />
-                    LinkedIn
                   </Button>
                 </div>
               </CardContent>

@@ -38,7 +38,7 @@ export default function InterviewPage() {
     setIsGeneratingReport(true)
     try {
       // Generate AI evaluation
-      const evaluation = await generateEvaluation(finalMessages, config.resumeContext, lang, antiCheatSummary)
+      const evaluation = await generateEvaluation(finalMessages, config.resumeContext, lang, antiCheatSummary, config.customConfig)
 
       // Save to Supabase
       const { error } = await supabase.from('interview_reports').insert([{
@@ -71,6 +71,7 @@ export default function InterviewPage() {
       <InterviewRoom
         userEmail={user.email}
         resumeContext={config.resumeContext}
+        customConfig={config.customConfig}
         onGenerateReport={handleGenerateReport}
         onExit={handleExit}
       />

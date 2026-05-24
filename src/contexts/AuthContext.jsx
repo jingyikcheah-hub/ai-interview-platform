@@ -25,9 +25,7 @@ export function AuthProvider({ children }) {
     await supabase.auth.signInWithOAuth({ provider: 'github' })
   }
 
-  const loginWithLinkedIn = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'linkedin_oidc' })
-  }
+
 
   const loginAsGuest = async () => {
     // Mock user for testing without Auth configuration
@@ -41,7 +39,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, loginWithGithub, loginWithLinkedIn, loginAsGuest, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, loginWithGithub, loginAsGuest, logout }}>
       {children}
     </AuthContext.Provider>
   )

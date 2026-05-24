@@ -20,10 +20,11 @@ import VisualMonitor from './VisualMonitor'
  *   onExit: () => void,
  *   userEmail: string,
  *   resumeContext: string,
+ *   customConfig: object,
  *   onGenerateReport: (messages: Array, antiCheatSummary: object) => Promise<void>
  * }} props
  */
-export default function InterviewRoom({ onExit, userEmail, resumeContext = '', onGenerateReport }) {
+export default function InterviewRoom({ onExit, userEmail, resumeContext = '', customConfig, onGenerateReport }) {
   const { t, lang } = useI18n()
   const {
     messages,
@@ -134,7 +135,7 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
     try {
       // Build prompt with FULL conversation history
       const currentMessages = [...messages, { role: 'user', text: textToSend, timestamp: Date.now() }]
-      const prompt = buildInterviewPrompt(textToSend, resumeContext || config?.resumeContext || '', currentMessages, lang)
+      const prompt = buildInterviewPrompt(textToSend, resumeContext || config?.resumeContext || '', currentMessages, lang, customConfig || config?.customConfig)
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
@@ -144,7 +145,18 @@ export default function InterviewRoom({ onExit, userEmail, resumeContext = '', o
         body: JSON.stringify({ prompt }),
       })
 
-      const data = await response.json()
+      const textResponse = await response.text()
+      if (!textResponse) {
+        throw new Error(`Empty response from server (Status: ${response.status})`)
+      }
+
+      let data;
+      try {
+        data = JSON.parse(textResponse)
+      } catch (err) {
+        console.error("Failed to parse JSON. Raw response:", textResponse)
+        throw new Error(`Failed to parse server response. Status: ${response.status}`)
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch from backend API')

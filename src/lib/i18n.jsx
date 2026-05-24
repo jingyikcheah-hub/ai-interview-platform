@@ -9,6 +9,8 @@ const translations = {
 
     // Nav
     'nav.dashboard': 'Dashboard',
+    'nav.generate': 'JD Generator',
+    'nav.pipeline': 'Talent Intelligence',
     'nav.interview': 'Interview Lab',
     'nav.reports': 'Reports',
     'nav.pricing': 'Pricing',
@@ -122,6 +124,35 @@ const translations = {
     'common.save': 'Save',
     'common.delete': 'Delete',
 
+    // JD Generator
+    'jd.title': 'JD Auto-Generator',
+    'jd.subtitle': 'Paste a Job Description. AI will instantly generate a tailored interview plan and specific questions.',
+    'jd.input.title': 'Job Description',
+    'jd.input.placeholder': 'Paste the full Job Description here...\n\ne.g., "Looking for a Senior React Native Developer with 5+ years experience..."',
+    'jd.btn.generate': 'Generate Interview Plan',
+    'jd.btn.generating': 'Analyzing JD...',
+    'jd.empty': 'Awaiting Job Description input to synthesize interview plan.',
+    'jd.loading': 'Synthesizing evaluation criteria...',
+    'jd.btn.launch': 'Launch Tailored Interview',
+
+    // Pipeline
+    'pipeline.title': 'Talent Pipeline Intelligence',
+    'pipeline.subtitle': 'Aggregated insights from all candidate evaluations.',
+    'pipeline.btn.generate': 'AI Insights',
+    'pipeline.btn.generating': 'Analyzing...',
+    'pipeline.total': 'TOTAL CANDIDATES',
+    'pipeline.ai.title': 'Executive AI Summary',
+    'pipeline.chart.trend': 'Pipeline Quality Trend',
+    'pipeline.chart.verdict': 'Verdict Distribution',
+    'pipeline.chart.radar': 'Average Competency Radar',
+
+    // Prediction
+    'prediction.title': 'AI Success Prediction',
+    'prediction.loading': 'Generating AI Predictive Models...',
+    'prediction.retention': '1-Year Retention',
+    'prediction.promotion': '2-Yr Promotion Prob',
+    'prediction.velocity': 'Code Velocity',
+
     // Dimensions
     'dim.ad': 'Architecture Design',
     'dim.cf': 'Core Fundamentals',
@@ -137,6 +168,8 @@ const translations = {
     'brand.tagline.short': '代码即信用',
 
     'nav.dashboard': '控制面板',
+    'nav.generate': 'JD 面试生成',
+    'nav.pipeline': '人才管道分析',
     'nav.interview': '面试实验室',
     'nav.reports': '评估报告',
     'nav.pricing': '订阅计划',
@@ -241,6 +274,35 @@ const translations = {
     'common.confirm': '确认',
     'common.save': '保存',
     'common.delete': '删除',
+
+    // JD Generator
+    'jd.title': 'JD 自动生成面试',
+    'jd.subtitle': '粘贴职位描述 (JD)，AI 将瞬间生成量身定制的面试方案和专属题库。',
+    'jd.input.title': '职位描述',
+    'jd.input.placeholder': '在此处粘贴完整的职位描述...\n\n例如："寻找拥有5年以上经验的高级 React Native 开发者..."',
+    'jd.btn.generate': '生成面试方案',
+    'jd.btn.generating': '正在解析 JD...',
+    'jd.empty': '等待输入职位描述以合成面试方案。',
+    'jd.loading': '正在合成评估标准与专属题库...',
+    'jd.btn.launch': '启动定制化面试',
+
+    // Pipeline
+    'pipeline.title': 'Talent Pipeline Intelligence',
+    'pipeline.subtitle': '基于所有候选人评估数据的深度聚合洞察。',
+    'pipeline.btn.generate': 'AI 深度洞察',
+    'pipeline.btn.generating': '分析中...',
+    'pipeline.total': '总候选人数',
+    'pipeline.ai.title': 'AI 核心摘要',
+    'pipeline.chart.trend': '人才质量趋势',
+    'pipeline.chart.verdict': '评估结果分布',
+    'pipeline.chart.radar': '平均能力雷达图',
+
+    // Prediction
+    'prediction.title': 'AI 成功率预测模型',
+    'prediction.loading': '正在生成 AI 预测模型...',
+    'prediction.retention': '1年留存概率',
+    'prediction.promotion': '2年晋升概率',
+    'prediction.velocity': '代码产出速率',
 
     // Dimensions
     'dim.ad': '架构设计',

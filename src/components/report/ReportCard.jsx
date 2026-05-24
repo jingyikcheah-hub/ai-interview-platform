@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n'
 import RadarChart from './RadarChart'
 import IntegrityBadge from './IntegrityBadge'
 import ChatMessage from '../interview/ChatMessage'
+import PredictionCard from './PredictionCard'
 
 const DIMENSION_I18N = {
   'Architecture Design': { en: 'Architecture Design', cn: '架构设计' },
@@ -233,6 +234,11 @@ function ReportCard({ report }) {
           </Card>
         </motion.div>
       )}
+
+      {/* ====== 3.5 AI Prediction ====== */}
+      <motion.div variants={item}>
+        <PredictionCard evaluation={evaluation} />
+      </motion.div>
 
       {/* ====== 4. Strengths ====== */}
       {strengths.length > 0 && (

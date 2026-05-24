@@ -8,7 +8,7 @@ export function InterviewProvider({ children }) {
   const [sessionId, setSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [isActive, setIsActive] = useState(false)
-  const [config, setConfig] = useState({ resumeContext: '', language: 'en' })
+  const [config, setConfig] = useState({ resumeContext: '', language: 'en', customConfig: null })
   const [antiCheatLog, setAntiCheatLog] = useState([])
   const [startTime, setStartTime] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -31,11 +31,11 @@ export function InterviewProvider({ children }) {
     }
   }, [messages, antiCheatLog, sessionId, config, startTime])
 
-  const startInterview = useCallback((resumeContext = '', language = 'en') => {
+  const startInterview = useCallback((resumeContext = '', language = 'en', customConfig = null) => {
     const id = uuidv4()
     setSessionId(id)
     setMessages([])
-    setConfig({ resumeContext, language })
+    setConfig({ resumeContext, language, customConfig })
     setAntiCheatLog([])
     setStartTime(Date.now())
     setElapsedSeconds(0)
@@ -48,7 +48,7 @@ export function InterviewProvider({ children }) {
     if (data) {
       setSessionId(savedSessionId)
       setMessages(data.messages || [])
-      setConfig(data.config || { resumeContext: '', language: 'en' })
+      setConfig(data.config || { resumeContext: '', language: 'en', customConfig: null })
       setAntiCheatLog(data.antiCheatLog || [])
       setStartTime(data.startTime || Date.now())
       setIsActive(true)

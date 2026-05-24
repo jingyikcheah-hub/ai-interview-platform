@@ -5,6 +5,8 @@ import { useI18n } from '@/lib/i18n'
 
 const NAV_LINKS = [
   { to: '/dashboard', labelKey: 'nav.dashboard', icon: 'fa-solid fa-gauge-high' },
+  { to: '/generate', labelKey: 'nav.generate', icon: 'fa-solid fa-wand-magic-sparkles' },
+  { to: '/pipeline', labelKey: 'nav.pipeline', icon: 'fa-solid fa-chart-network' },
   { to: '/pricing', labelKey: 'nav.pricing', icon: 'fa-solid fa-tags' },
 ]
 
