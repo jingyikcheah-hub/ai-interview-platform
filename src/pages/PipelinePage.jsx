@@ -36,7 +36,23 @@ export default function PipelinePage() {
       }
       setLoading(false)
     }
+    
     fetchData()
+
+    // Real-time subscription
+    const channel = supabase.channel('realtime:interview_reports')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'interview_reports' },
+        (payload) => {
+          setReports(current => [...current, payload.new])
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const handleGenerateInsights = async () => {

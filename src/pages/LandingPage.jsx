@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/lib/i18n'
+import { supabase } from '@/lib/supabase'
 
 const stagger = {
   hidden: {},
@@ -22,44 +23,91 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const [statCounts, setStatCounts] = useState({ interviews: 0, engineers: 0, accuracy: 0 })
 
-  // Animated counter effect
+  // Real-time counter effect
   useEffect(() => {
-    const targets = { interviews: 12847, engineers: 3291, accuracy: 97 }
-    const duration = 2000
-    const steps = 60
-    const interval = duration / steps
-    let step = 0
+    let currentTimer = null;
+    
+    const animateTo = (start, targets) => {
+      if (currentTimer) clearInterval(currentTimer);
+      const duration = 1500;
+      const steps = 40;
+      const interval = duration / steps;
+      let step = 0;
+      
+      currentTimer = setInterval(() => {
+        step++;
+        const progress = Math.min(step / steps, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        
+        setStatCounts({
+          interviews: Math.floor(start.interviews + (targets.interviews - start.interviews) * eased),
+          engineers: Math.floor(start.engineers + (targets.engineers - start.engineers) * eased),
+          accuracy: Math.floor(start.accuracy + (targets.accuracy - start.accuracy) * eased),
+        });
+        
+        if (step >= steps) clearInterval(currentTimer);
+      }, interval);
+    };
 
-    const timer = setInterval(() => {
-      step++
-      const progress = Math.min(step / steps, 1)
-      const eased = 1 - Math.pow(1 - progress, 3) // easeOutCubic
-      setStatCounts({
-        interviews: Math.floor(targets.interviews * eased),
-        engineers: Math.floor(targets.engineers * eased),
-        accuracy: Math.floor(targets.accuracy * eased),
-      })
-      if (step >= steps) clearInterval(timer)
-    }, interval)
+    const fetchRealStats = async (startVals = { interviews: 0, engineers: 0, accuracy: 0 }) => {
+      const { data, error } = await supabase.from('interview_reports').select('candidate_email, integrity');
+      if (!error && data) {
+        const uniqueEmails = new Set(data.filter(d => d.candidate_email).map(d => d.candidate_email));
+        const total = data.length;
+        
+        let avgIntegrity = 0;
+        if (total > 0) {
+          const sum = data.reduce((acc, r) => acc + (r.integrity?.integrityScore || 100), 0);
+          avgIntegrity = Math.round(sum / total);
+        }
 
-    return () => clearInterval(timer)
-  }, [])
+        const targets = { 
+          interviews: total,
+          engineers: uniqueEmails.size,
+          accuracy: avgIntegrity 
+        };
+
+        animateTo(startVals, targets);
+        return targets;
+      }
+      return startVals;
+    };
+
+    let latestStats = { interviews: 0, engineers: 0, accuracy: 0 };
+    fetchRealStats(latestStats).then(t => { latestStats = t });
+    
+    // Real-time subscription
+    const channel = supabase.channel('realtime:landing_stats')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'interview_reports' },
+        () => {
+          fetchRealStats(latestStats).then(t => { latestStats = t });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (currentTimer) clearInterval(currentTimer);
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const features = [
     {
-      icon: 'fa-solid fa-brain',
+      icon: 'fa-solid fa-chart-line', // Changed from fa-chart-network
       title: t('landing.feature1.title'),
       desc: t('landing.feature1.desc'),
       gradient: 'from-blue-500/20 to-cyan-500/20',
     },
     {
-      icon: 'fa-solid fa-code',
+      icon: 'fa-solid fa-wand-magic-sparkles',
       title: t('landing.feature2.title'),
       desc: t('landing.feature2.desc'),
       gradient: 'from-emerald-500/20 to-teal-500/20',
     },
     {
-      icon: 'fa-solid fa-chart-radar',
+      icon: 'fa-solid fa-brain', // Changed from fa-crystal-ball
       title: t('landing.feature3.title'),
       desc: t('landing.feature3.desc'),
       gradient: 'from-purple-500/20 to-pink-500/20',
