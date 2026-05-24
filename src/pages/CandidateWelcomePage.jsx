@@ -22,6 +22,7 @@ export default function CandidateWelcomePage() {
 
   // Extract config from URL
   const b64Data = searchParams.get('data')
+  const autoStart = searchParams.get('autoStart')
   let inviteConfig = { jobTitle: 'Software Engineer', resumeContext: '' }
   try {
     if (b64Data) {
