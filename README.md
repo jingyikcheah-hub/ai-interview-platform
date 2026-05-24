@@ -38,6 +38,3 @@ VITE_GEMINI_API_KEY=your_gemini_api_key
 \`\`\`bash
 npm run dev
 \`\`\`
-
-## 📄 开源协议 (License)
-本项目基于 [MIT License](LICENSE) 开源。
